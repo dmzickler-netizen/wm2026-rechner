@@ -133,7 +133,7 @@
       lot[p.group]=true; lot[q.group]=true
       return p.group<q.group?-1:1
     })
-    return thirds.map(function(e,i){ return {team:e.team.team,group:e.group,rank:i+1,points:e.team.points,gd:e.team.gd,gf:e.team.gf,fairPlay:e.team.fairPlay,qualifies:i<8,lot:!!lot[e.group]} })
+    return thirds.map(function(e,i){ return {team:e.team.team,group:e.group,rank:i+1,played:e.team.played,points:e.team.points,gd:e.team.gd,gf:e.team.gf,fairPlay:e.team.fairPlay,qualifies:i<8,lot:!!lot[e.group]} })
   }
 
   // ---------- Szenarien: erreichbare Plätze ----------
@@ -317,10 +317,10 @@
 
   function renderThirds(thirds){
     var h='<h2>Rangliste der Gruppendritten (8 von 12 weiter)</h2><table class="standings"><thead><tr>'
-      +'<th>#</th><th class="l">Team</th><th>Gr.</th><th>Pkt</th><th>TD</th><th>Tore</th><th>FP</th><th></th></tr></thead><tbody>'
+      +'<th>#</th><th class="l">Team</th><th>Gr.</th><th>Sp</th><th>Pkt</th><th>TD</th><th>Tore</th><th>FP</th><th></th></tr></thead><tbody>'
     thirds.forEach(function(e){
       h+='<tr class="'+(e.qualifies?'adv':'out')+'"><td>'+e.rank+(e.lot?' 🎲':'')+'</td><td class="l">'+flag(nameOf(e.team))+esc(nameOf(e.team))+'</td>'
-        +'<td>'+e.group+'</td><td><b>'+e.points+'</b></td><td>'+(e.gd>0?'+'+e.gd:e.gd)+'</td><td>'+e.gf+'</td><td>'+e.fairPlay+'</td><td>'+(e.qualifies?'✅':'❌')+'</td></tr>'
+        +'<td>'+e.group+'</td><td>'+e.played+'</td><td><b>'+e.points+'</b></td><td>'+(e.gd>0?'+'+e.gd:e.gd)+'</td><td>'+e.gf+'</td><td>'+e.fairPlay+'</td><td>'+(e.qualifies?'✅':'❌')+'</td></tr>'
     })
     h+='</tbody></table>'
     el('thirds').innerHTML=h

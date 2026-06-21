@@ -1,9 +1,5 @@
 <!doctype html>
-<html lang="de">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WM 2026 – Gegner-Rechner</title>
+<html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>WM 2026 – Gegner-Rechner</title>
 <style>
 :root {
   --bg: #0f1419;
@@ -123,25 +119,14 @@ table.bracket .l { text-align: left; width: 42%; }
 table.bracket .vs { text-align: center; color: var(--muted); }
 table.bracket tr.mine td { background: rgba(0,208,132,0.14); }
 
-</style>
-</head>
-<body>
+</style></head><body>
 <div class="app">
-  <header>
-    <h1>⚽ WM 2026 – Gegner-Rechner</h1>
-    <p class="sub">Echte Auslosung + aktueller Spielstand (Stand 21.06.2026). Ergebnisse eingeben/ändern → Tabellen, Tiebreaker und mögliche Gegner. Alle FIFA-Regeln (Punkte, direkter Vergleich, Tordifferenz, Tore, Fair-Play, Los) werden berücksichtigt.</p>
-    <div class="toolbar">
-      <label class="myteam">Mein Team: <select id="myTeam"></select></label>
-      <button id="btnClear">Ergebnisse leeren</button>
-      <button id="btnReset">Auf echten Stand zurücksetzen</button>
-    </div>
-  </header>
-  <div id="myteam"></div>
-  <nav class="tabs" id="tabs"></nav>
-  <section id="groupInputs"></section>
-  <section id="standings"></section>
-  <section id="thirds"></section>
-  <section id="opponents"></section>
+  <header><h1>⚽ WM 2026 – Gegner-Rechner</h1>
+  <p class="sub">Echte Auslosung + aktueller Spielstand (Stand 21.06.2026). Ergebnisse eingeben/ändern → Tabellen, Tiebreaker und mögliche Gegner. Alle FIFA-Regeln werden berücksichtigt.</p>
+  <div class="toolbar"><label class="myteam">Mein Team: <select id="myTeam"></select></label>
+  <button id="btnClear">Ergebnisse leeren</button><button id="btnReset">Auf echten Stand zurücksetzen</button></div></header>
+  <div id="myteam"></div><nav class="tabs" id="tabs"></nav>
+  <section id="groupInputs"></section><section id="standings"></section><section id="thirds"></section><section id="opponents"></section>
 </div>
 <script>
 var R32_DATA = {
@@ -5466,7 +5451,7 @@ var WC2026 = {
       lot[p.group]=true; lot[q.group]=true
       return p.group<q.group?-1:1
     })
-    return thirds.map(function(e,i){ return {team:e.team.team,group:e.group,rank:i+1,points:e.team.points,gd:e.team.gd,gf:e.team.gf,fairPlay:e.team.fairPlay,qualifies:i<8,lot:!!lot[e.group]} })
+    return thirds.map(function(e,i){ return {team:e.team.team,group:e.group,rank:i+1,played:e.team.played,points:e.team.points,gd:e.team.gd,gf:e.team.gf,fairPlay:e.team.fairPlay,qualifies:i<8,lot:!!lot[e.group]} })
   }
 
   // ---------- Szenarien: erreichbare Plätze ----------
@@ -5650,10 +5635,10 @@ var WC2026 = {
 
   function renderThirds(thirds){
     var h='<h2>Rangliste der Gruppendritten (8 von 12 weiter)</h2><table class="standings"><thead><tr>'
-      +'<th>#</th><th class="l">Team</th><th>Gr.</th><th>Pkt</th><th>TD</th><th>Tore</th><th>FP</th><th></th></tr></thead><tbody>'
+      +'<th>#</th><th class="l">Team</th><th>Gr.</th><th>Sp</th><th>Pkt</th><th>TD</th><th>Tore</th><th>FP</th><th></th></tr></thead><tbody>'
     thirds.forEach(function(e){
       h+='<tr class="'+(e.qualifies?'adv':'out')+'"><td>'+e.rank+(e.lot?' 🎲':'')+'</td><td class="l">'+flag(nameOf(e.team))+esc(nameOf(e.team))+'</td>'
-        +'<td>'+e.group+'</td><td><b>'+e.points+'</b></td><td>'+(e.gd>0?'+'+e.gd:e.gd)+'</td><td>'+e.gf+'</td><td>'+e.fairPlay+'</td><td>'+(e.qualifies?'✅':'❌')+'</td></tr>'
+        +'<td>'+e.group+'</td><td>'+e.played+'</td><td><b>'+e.points+'</b></td><td>'+(e.gd>0?'+'+e.gd:e.gd)+'</td><td>'+e.gf+'</td><td>'+e.fairPlay+'</td><td>'+(e.qualifies?'✅':'❌')+'</td></tr>'
     })
     h+='</tbody></table>'
     el('thirds').innerHTML=h
@@ -5730,5 +5715,4 @@ var WC2026 = {
 })()
 
 </script>
-</body>
-</html>
+</body></html>

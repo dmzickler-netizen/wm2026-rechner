@@ -365,6 +365,7 @@ function ThirdPlacePanel(props: {
             <th>#</th>
             <th className="l">Team</th>
             <th>Gr.</th>
+            <th>Sp</th>
             <th>Pkt</th>
             <th>TD</th>
             <th>Tore</th>
@@ -381,6 +382,7 @@ function ThirdPlacePanel(props: {
               </td>
               <td className="l">{props.nameOf(e.team)}</td>
               <td>{e.group}</td>
+              <td>{e.played}</td>
               <td>
                 <b>{e.points}</b>
               </td>
