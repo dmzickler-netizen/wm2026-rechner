@@ -65,7 +65,13 @@ export default function App() {
         <div className="toolbar">
           <label className="myteam">
             Mein Team:
-            <select value={myTeam} onChange={(e) => setMyTeam(e.target.value)}>
+            <select
+              value={myTeam}
+              onChange={(e) => {
+                setMyTeam(e.target.value)
+                if (e.target.value) setGroup(e.target.value[0] as GroupId)
+              }}
+            >
               <option value="">– wählen –</option>
               {GROUP_IDS.map((g) => (
                 <optgroup key={g} label={`Gruppe ${g}`}>

@@ -5952,7 +5952,11 @@ var WC2026 = {
       +'<p class="hint disclaimer">'+esc(t('liveDisclaimer'))+'</p>'
     document.title = t('appTitle').replace(/^[^A-Za-z0-9]+/,'')
 
-    el('myTeam').addEventListener('change',function(){ ui.myTeam=this.value; renderDerived() })
+    el('myTeam').addEventListener('change',function(){
+      ui.myTeam=this.value
+      if(this.value){ ui.group=this.value.charAt(0); renderTabs(); renderGroupInputs() } // Gruppe des Teams aufschlagen
+      renderDerived()
+    })
     var ls=el('langSel'); ls.value=ui.lang
     ls.addEventListener('change',function(){ ui.lang=this.value; saveLang(); renderAll() })
     var tg=el('liveToggle'); tg.checked=ui.live
