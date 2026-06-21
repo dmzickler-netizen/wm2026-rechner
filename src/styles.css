@@ -29,7 +29,8 @@ header h1 { margin: 0 0 4px; font-size: 28px; }
   display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
   padding: 12px; background: var(--panel); border-radius: 10px;
 }
-.toolbar .myteam { display: flex; gap: 8px; align-items: center; }
+.toolbar .myteam, .toolbar .lang, .toolbar .live { display: flex; gap: 8px; align-items: center; }
+.disclaimer { margin: 10px 2px 0; padding: 8px 12px; background: rgba(224,177,58,0.10); border-left: 3px solid #e0b13a; border-radius: 6px; }
 
 select, input, button {
   background: var(--panel2); color: var(--text);

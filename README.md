@@ -40,6 +40,18 @@ trägt sie automatisch ein. Status oben in der Leiste („🔴 Live · aktualisi
 - Hinweis: Der kostenlose Zugang liefert beendete Spiele (near-live), keinen
   Sekunden-Ticker. Für echten In-Game-Live bräuchte es einen Premium-API-Key.
 
+### Sprache
+
+Oben rechts umschaltbar: **Deutsch / English / Español** – übersetzt die ganze
+Oberfläche inkl. Ländernamen, Spaltenköpfe und Rundenbezeichnungen. Die Wahl
+wird im Browser gemerkt.
+
+### Hypothetische Ergebnisse
+
+Jedes Ergebnis lässt sich manuell eintippen/überschreiben (z. B. „Was wäre,
+wenn …"). Manuell gesetzte Spiele werden von der Live-Aktualisierung **nicht**
+überschrieben; „Auf echten Stand zurücksetzen" hebt das wieder auf.
+
 ### Neu bauen nach Änderungen
 
 `vorschau.html` wird aus `src/styles.css`, `src/r32-combinations.json`,

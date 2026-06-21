@@ -36,7 +36,8 @@ header h1 { margin: 0 0 4px; font-size: 28px; }
   display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
   padding: 12px; background: var(--panel); border-radius: 10px;
 }
-.toolbar .myteam { display: flex; gap: 8px; align-items: center; }
+.toolbar .myteam, .toolbar .lang, .toolbar .live { display: flex; gap: 8px; align-items: center; }
+.disclaimer { margin: 10px 2px 0; padding: 8px 12px; background: rgba(224,177,58,0.10); border-left: 3px solid #e0b13a; border-radius: 6px; }
 
 select, input, button {
   background: var(--panel2); color: var(--text);
@@ -127,18 +128,7 @@ table.bracket tr.mine td { background: rgba(0,208,132,0.14); }
 </head>
 <body>
 <div class="app">
-  <header>
-    <h1>⚽ WM 2026 – Gegner-Rechner</h1>
-    <p class="sub">Echte Auslosung + Live-Ergebnisse. Tabellen, FIFA-Tiebreaker und mögliche Gegner. Live-Daten von TheSportsDB; bei fehlender Verbindung wird der gespeicherte Stand gezeigt. Ergebnisse lassen sich jederzeit manuell überschreiben.</p>
-    <div class="toolbar">
-      <label class="myteam">Mein Team: <select id="myTeam"></select></label>
-      <label class="live"><input type="checkbox" id="liveToggle"> 🔴 Live</label>
-      <button id="btnRefresh">Jetzt aktualisieren</button>
-      <span id="liveStatus" class="hint"></span>
-      <button id="btnClear">Ergebnisse leeren</button>
-      <button id="btnReset">Auf echten Stand zurücksetzen</button>
-    </div>
-  </header>
+  <header id="hdr"></header>
   <div id="myteam"></div>
   <nav class="tabs" id="tabs"></nav>
   <section id="groupInputs"></section>
@@ -5197,6 +5187,56 @@ var WC2026 = {
     "England": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "Kroatien": "🇭🇷", "Ghana": "🇬🇭", "Panama": "🇵🇦"
   },
   "apiLeagueId": "4429",
+  "i18nNames": {
+    "Mexiko": { "en": "Mexico", "es": "México" },
+    "Südafrika": { "en": "South Africa", "es": "Sudáfrica" },
+    "Südkorea": { "en": "South Korea", "es": "Corea del Sur" },
+    "Tschechien": { "en": "Czech Republic", "es": "Chequia" },
+    "Kanada": { "en": "Canada", "es": "Canadá" },
+    "Bosnien-Herzegowina": { "en": "Bosnia and Herzegovina", "es": "Bosnia y Herzegovina" },
+    "Katar": { "en": "Qatar", "es": "Catar" },
+    "Schweiz": { "en": "Switzerland", "es": "Suiza" },
+    "Brasilien": { "en": "Brazil", "es": "Brasil" },
+    "Marokko": { "en": "Morocco", "es": "Marruecos" },
+    "Haiti": { "en": "Haiti", "es": "Haití" },
+    "Schottland": { "en": "Scotland", "es": "Escocia" },
+    "USA": { "en": "United States", "es": "Estados Unidos" },
+    "Paraguay": { "en": "Paraguay", "es": "Paraguay" },
+    "Australien": { "en": "Australia", "es": "Australia" },
+    "Türkei": { "en": "Turkey", "es": "Turquía" },
+    "Deutschland": { "en": "Germany", "es": "Alemania" },
+    "Curaçao": { "en": "Curaçao", "es": "Curazao" },
+    "Elfenbeinküste": { "en": "Ivory Coast", "es": "Costa de Marfil" },
+    "Ecuador": { "en": "Ecuador", "es": "Ecuador" },
+    "Niederlande": { "en": "Netherlands", "es": "Países Bajos" },
+    "Japan": { "en": "Japan", "es": "Japón" },
+    "Schweden": { "en": "Sweden", "es": "Suecia" },
+    "Tunesien": { "en": "Tunisia", "es": "Túnez" },
+    "Belgien": { "en": "Belgium", "es": "Bélgica" },
+    "Ägypten": { "en": "Egypt", "es": "Egipto" },
+    "Iran": { "en": "Iran", "es": "Irán" },
+    "Neuseeland": { "en": "New Zealand", "es": "Nueva Zelanda" },
+    "Spanien": { "en": "Spain", "es": "España" },
+    "Kap Verde": { "en": "Cape Verde", "es": "Cabo Verde" },
+    "Saudi-Arabien": { "en": "Saudi Arabia", "es": "Arabia Saudita" },
+    "Uruguay": { "en": "Uruguay", "es": "Uruguay" },
+    "Frankreich": { "en": "France", "es": "Francia" },
+    "Senegal": { "en": "Senegal", "es": "Senegal" },
+    "Irak": { "en": "Iraq", "es": "Irak" },
+    "Norwegen": { "en": "Norway", "es": "Noruega" },
+    "Argentinien": { "en": "Argentina", "es": "Argentina" },
+    "Algerien": { "en": "Algeria", "es": "Argelia" },
+    "Österreich": { "en": "Austria", "es": "Austria" },
+    "Jordanien": { "en": "Jordan", "es": "Jordania" },
+    "Portugal": { "en": "Portugal", "es": "Portugal" },
+    "DR Kongo": { "en": "DR Congo", "es": "RD Congo" },
+    "Usbekistan": { "en": "Uzbekistan", "es": "Uzbekistán" },
+    "Kolumbien": { "en": "Colombia", "es": "Colombia" },
+    "England": { "en": "England", "es": "Inglaterra" },
+    "Kroatien": { "en": "Croatia", "es": "Croacia" },
+    "Ghana": { "en": "Ghana", "es": "Ghana" },
+    "Panama": { "en": "Panama", "es": "Panamá" }
+  },
   "aliases": {
     "Mexiko": ["Mexico"],
     "Südafrika": ["South Africa"],
@@ -5386,79 +5426,156 @@ var WC2026 = {
 </script>
 <script>
 /* WM 2026 Gegner-Rechner – eigenständige Version (kein Build nötig).
-   Erwartet globales R32_DATA (aus der offiziellen FIFA-Tabelle). */
+   Erwartet globale R32_DATA + WC2026 (vom Build injiziert). */
 (function () {
   'use strict'
 
-  // ---------- Konstanten / Spielplan ----------
+  // ---------- Konstanten ----------
   var GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L']
-  var FLAGS = (typeof WC2026 !== 'undefined' && WC2026.flags) || {}
-  function flag(name){ return FLAGS[name] ? FLAGS[name] + ' ' : '' }
+
+  // ---------- i18n ----------
+  var LANGKEY = 'wm2026-lang'
+  var T = {
+    de: {
+      appTitle: '⚽ WM 2026 – Gegner-Rechner',
+      subtitle: 'Echte Auslosung + Live-Ergebnisse. Tabellen, FIFA-Tiebreaker und mögliche Gegner. Ergebnisse jederzeit manuell überschreibbar.',
+      lblMyTeam: 'Mein Team:', selectPlaceholder: '– wählen –', lblLang: 'Sprache:', lblLive: 'Live',
+      refreshNow: 'Jetzt aktualisieren', clearResults: 'Ergebnisse leeren', resetLive: 'Auf echten Stand zurücksetzen',
+      liveDisclaimer: '⏱ Ergebnisse werden automatisch geladen (alle ~45 s) und spiegeln beendete Spiele wider – kein offizieller Sekunden-Ticker, kurze Verzögerung möglich.',
+      liveOff: 'Live aus', liveUpdated: 'aktualisiert', liveLoading: 'lädt…', liveNoConn: '⚠ keine Verbindung – gespeicherter Stand',
+      group: 'Gruppe', resultsHeading: 'Ergebnisse', openHint: 'Leeres Feld = Spiel offen.',
+      manualHint: 'Tipp: Eigene/hypothetische Ergebnisse eintippen – diese werden von der Live-Aktualisierung nicht überschrieben.',
+      teamsFairplay: 'Teams & Fair-Play', fairplay: 'Fair-Play:', tableWord: 'Tabelle',
+      col_team: 'Team', col_mp: 'Sp', col_w: 'S', col_d: 'U', col_l: 'N', col_goals: 'Tore', col_gd: 'TD', col_pts: 'Pkt', col_grp: 'Gr.', col_fp: 'FP',
+      legAdv: '1./2. → weiter', legMaybe: '3. → evtl.', legOut: 'raus', legLot: '🎲 = Los',
+      thirdsHeading: 'Rangliste der Gruppendritten (8 von 12 weiter)',
+      verdictSafe: 'Sicher weiter (mind. Platz 2)', verdictOut: 'Ausgeschieden', verdictNoData: 'Keine Daten',
+      verdictMaybeP: 'Weiterkommen möglich (Plätze {x})', verdictThirdOnlyP: 'Nur als Gruppendritter möglich (Plätze {x})',
+      lblPosition: 'Platz', factReachable: 'Erreichbare Endplätze', factScenarios: 'Durchgerechnete Szenarien',
+      approxNote: '(genähert: nur S/U/N)', asThird: 'Als Gruppendritter aktuell Rang',
+      top8yes: 'unter den besten 8 ✅', top8no: 'NICHT unter den besten 8 ❌',
+      oppHeading: 'Mögliche Gegner (K.-o.-Phase)',
+      oppHint: 'Basierend auf der aktuellen Tabelle (1./2. + die 8 besten Dritten). R32-Gegner steht fest; ab Achtelfinale = mögliche Gegner.',
+      wayOf: 'Weg von', vsWord: 'vs', possOpp: 'mögl. Gegner:',
+      notInR16: 'ist nach aktueller Tabelle nicht im Achtelfinale.', fullR32: 'Komplettes Sechzehntelfinale (R32)',
+      bracketUnresolved: 'Bracket konnte nicht aufgelöst werden.',
+      round_R32: 'Sechzehntelfinale', round_R16: 'Achtelfinale', round_QF: 'Viertelfinale', round_SF: 'Halbfinale', round_F: 'Finale',
+    },
+    en: {
+      appTitle: '⚽ World Cup 2026 – Opponent Finder',
+      subtitle: 'Real draw + live results. Tables, FIFA tiebreakers and possible opponents. You can override any result manually.',
+      lblMyTeam: 'My team:', selectPlaceholder: '– select –', lblLang: 'Language:', lblLive: 'Live',
+      refreshNow: 'Refresh now', clearResults: 'Clear results', resetLive: 'Reset to live data',
+      liveDisclaimer: '⏱ Results load automatically (every ~45 s) and reflect finished matches – not an official live ticker, short delay possible.',
+      liveOff: 'Live off', liveUpdated: 'updated', liveLoading: 'loading…', liveNoConn: '⚠ no connection – saved data',
+      group: 'Group', resultsHeading: 'Results', openHint: 'Empty field = match not played.',
+      manualHint: 'Tip: type your own/hypothetical results – live updates will not overwrite them.',
+      teamsFairplay: 'Teams & fair play', fairplay: 'Fair play:', tableWord: 'Table',
+      col_team: 'Team', col_mp: 'MP', col_w: 'W', col_d: 'D', col_l: 'L', col_goals: 'Goals', col_gd: 'GD', col_pts: 'Pts', col_grp: 'Grp', col_fp: 'FP',
+      legAdv: '1st/2nd → advance', legMaybe: '3rd → maybe', legOut: 'out', legLot: '🎲 = drawing of lots',
+      thirdsHeading: 'Ranking of third-placed teams (8 of 12 advance)',
+      verdictSafe: 'Through for sure (at least 2nd)', verdictOut: 'Eliminated', verdictNoData: 'No data',
+      verdictMaybeP: 'Advancing possible (positions {x})', verdictThirdOnlyP: 'Only as third place possible (positions {x})',
+      lblPosition: 'Position', factReachable: 'Reachable final positions', factScenarios: 'Scenarios computed',
+      approxNote: '(approx.: only W/D/L)', asThird: 'As third currently ranked',
+      top8yes: 'in the top 8 ✅', top8no: 'NOT in the top 8 ❌',
+      oppHeading: 'Possible opponents (knockout)',
+      oppHint: 'Based on the current table (1st/2nd + the 8 best third-placed). The Round-of-32 opponent is fixed; from the Round of 16 on, these are possible opponents.',
+      wayOf: 'Path of', vsWord: 'vs', possOpp: 'poss. opponents:',
+      notInR16: 'is not in the Round of 16 based on the current table.', fullR32: 'Full Round of 32',
+      bracketUnresolved: 'Bracket could not be resolved.',
+      round_R32: 'Round of 32', round_R16: 'Round of 16', round_QF: 'Quarter-finals', round_SF: 'Semi-finals', round_F: 'Final',
+    },
+    es: {
+      appTitle: '⚽ Mundial 2026 – Buscador de rivales',
+      subtitle: 'Sorteo real + resultados en vivo. Tablas, criterios de desempate FIFA y posibles rivales. Puedes sobrescribir cualquier resultado manualmente.',
+      lblMyTeam: 'Mi equipo:', selectPlaceholder: '– elegir –', lblLang: 'Idioma:', lblLive: 'En vivo',
+      refreshNow: 'Actualizar ahora', clearResults: 'Borrar resultados', resetLive: 'Restablecer datos reales',
+      liveDisclaimer: '⏱ Los resultados se cargan automáticamente (cada ~45 s) y reflejan partidos finalizados – no es un marcador oficial en vivo, puede haber un pequeño retraso.',
+      liveOff: 'En vivo: apagado', liveUpdated: 'actualizado', liveLoading: 'cargando…', liveNoConn: '⚠ sin conexión – datos guardados',
+      group: 'Grupo', resultsHeading: 'Resultados', openHint: 'Campo vacío = partido pendiente.',
+      manualHint: 'Consejo: escribe tus propios resultados/hipotéticos – la actualización en vivo no los sobrescribe.',
+      teamsFairplay: 'Equipos y juego limpio', fairplay: 'Juego limpio:', tableWord: 'Tabla',
+      col_team: 'Equipo', col_mp: 'PJ', col_w: 'G', col_d: 'E', col_l: 'P', col_goals: 'Goles', col_gd: 'DG', col_pts: 'Pts', col_grp: 'Gr.', col_fp: 'JL',
+      legAdv: '1.º/2.º → avanzan', legMaybe: '3.º → quizá', legOut: 'fuera', legLot: '🎲 = sorteo',
+      thirdsHeading: 'Clasificación de terceros (8 de 12 avanzan)',
+      verdictSafe: 'Clasificado seguro (mín. 2.º)', verdictOut: 'Eliminado', verdictNoData: 'Sin datos',
+      verdictMaybeP: 'Avance posible (posiciones {x})', verdictThirdOnlyP: 'Solo como tercero posible (posiciones {x})',
+      lblPosition: 'Posición', factReachable: 'Posiciones finales alcanzables', factScenarios: 'Escenarios calculados',
+      approxNote: '(aprox.: solo G/E/P)', asThird: 'Como tercero, actualmente puesto',
+      top8yes: 'entre los 8 mejores ✅', top8no: 'NO entre los 8 mejores ❌',
+      oppHeading: 'Posibles rivales (eliminatorias)',
+      oppHint: 'Según la tabla actual (1.º/2.º + los 8 mejores terceros). El rival de dieciseisavos es fijo; desde octavos son posibles rivales.',
+      wayOf: 'Camino de', vsWord: 'vs', possOpp: 'posibles rivales:',
+      notInR16: 'no está en octavos según la tabla actual.', fullR32: 'Dieciseisavos completos (R32)',
+      bracketUnresolved: 'No se pudo resolver el cuadro.',
+      round_R32: 'Dieciseisavos', round_R16: 'Octavos', round_QF: 'Cuartos', round_SF: 'Semifinales', round_F: 'Final',
+    },
+  }
+  function t(k){ var d=T[ui.lang]||T.de; return d[k]!=null?d[k]:(T.de[k]!=null?T.de[k]:k) }
+  function roundLabel(key){ return t('round_'+key) }
+
+  // ---------- Flaggen + lokalisierte Namen ----------
+  var FLAGS = (WC2026 && WC2026.flags) || {}
+  var I18N = (WC2026 && WC2026.i18nNames) || {}
+  var FLAG_BY_ANY = {} // jeder bekannte Namens-String (de/en/es) -> Emoji
+  Object.keys(FLAGS).forEach(function(de){
+    FLAG_BY_ANY[de] = FLAGS[de]
+    var e = I18N[de]; if(e){ if(e.en)FLAG_BY_ANY[e.en]=FLAGS[de]; if(e.es)FLAG_BY_ANY[e.es]=FLAGS[de] }
+  })
+  function flag(name){ return FLAG_BY_ANY[name] ? FLAG_BY_ANY[name] + ' ' : '' }
+  function locName(canonical){
+    if(ui.lang==='de') return canonical
+    var e=I18N[canonical]; return (e && e[ui.lang]) || canonical
+  }
 
   // ---------- Live-Daten (TheSportsDB, kostenlos, CORS offen) ----------
   var API_BASE = 'https://www.thesportsdb.com/api/v1/json/3/'
   var WC_LEAGUE = (WC2026 && WC2026.apiLeagueId) || '4429'
   var ALIASES = (WC2026 && WC2026.aliases) || {}
-  function norm(s){ return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'') }
-  // Normalisierter Team-Name -> interne Team-ID (group+pos), unabhängig von editierten Namen.
+  function norm(s){ return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]/g,'') }
   var ALIAS_TO_ID = {}
   GROUPS.forEach(function(g){
-    var data = WC2026.groups[g]
-    data.teams.forEach(function(nm,i){
+    WC2026.groups[g].teams.forEach(function(nm,i){
       var id = g+(i+1)
       ALIAS_TO_ID[norm(nm)] = id
       ;(ALIASES[nm]||[]).forEach(function(a){ ALIAS_TO_ID[norm(a)] = id })
     })
   })
 
-  // 16 R32-Spiele (73–88) aus r32Bracket.ts
+  // 16 R32-Spiele (73–88)
   var R32_MATCHES = [
-    {n:73,h:{t:'r',g:'A'},a:{t:'r',g:'B'}},
-    {n:74,h:{t:'w',g:'E'},a:{t:'3'}},
-    {n:75,h:{t:'w',g:'F'},a:{t:'r',g:'C'}},
-    {n:76,h:{t:'w',g:'C'},a:{t:'r',g:'F'}},
-    {n:77,h:{t:'w',g:'I'},a:{t:'3'}},
-    {n:78,h:{t:'r',g:'E'},a:{t:'r',g:'I'}},
-    {n:79,h:{t:'w',g:'A'},a:{t:'3'}},
-    {n:80,h:{t:'w',g:'L'},a:{t:'3'}},
-    {n:81,h:{t:'w',g:'D'},a:{t:'3'}},
-    {n:82,h:{t:'w',g:'G'},a:{t:'3'}},
-    {n:83,h:{t:'r',g:'K'},a:{t:'r',g:'L'}},
-    {n:84,h:{t:'w',g:'H'},a:{t:'r',g:'J'}},
-    {n:85,h:{t:'w',g:'B'},a:{t:'3'}},
-    {n:86,h:{t:'w',g:'J'},a:{t:'r',g:'H'}},
-    {n:87,h:{t:'w',g:'K'},a:{t:'3'}},
-    {n:88,h:{t:'r',g:'D'},a:{t:'r',g:'G'}},
+    {n:73,h:{t:'r',g:'A'},a:{t:'r',g:'B'}}, {n:74,h:{t:'w',g:'E'},a:{t:'3'}},
+    {n:75,h:{t:'w',g:'F'},a:{t:'r',g:'C'}}, {n:76,h:{t:'w',g:'C'},a:{t:'r',g:'F'}},
+    {n:77,h:{t:'w',g:'I'},a:{t:'3'}}, {n:78,h:{t:'r',g:'E'},a:{t:'r',g:'I'}},
+    {n:79,h:{t:'w',g:'A'},a:{t:'3'}}, {n:80,h:{t:'w',g:'L'},a:{t:'3'}},
+    {n:81,h:{t:'w',g:'D'},a:{t:'3'}}, {n:82,h:{t:'w',g:'G'},a:{t:'3'}},
+    {n:83,h:{t:'r',g:'K'},a:{t:'r',g:'L'}}, {n:84,h:{t:'w',g:'H'},a:{t:'r',g:'J'}},
+    {n:85,h:{t:'w',g:'B'},a:{t:'3'}}, {n:86,h:{t:'w',g:'J'},a:{t:'r',g:'H'}},
+    {n:87,h:{t:'w',g:'K'},a:{t:'3'}}, {n:88,h:{t:'r',g:'D'},a:{t:'r',g:'G'}},
   ]
-  var WINNER_TO_THIRD_MATCH = R32_DATA.winnerToMatch // {A:79,...}
+  var WINNER_TO_THIRD_MATCH = R32_DATA.winnerToMatch
   var MATCH_TO_WINNER = {}
-  Object.keys(WINNER_TO_THIRD_MATCH).forEach(function (g) {
-    MATCH_TO_WINNER[WINNER_TO_THIRD_MATCH[g]] = g
-  })
+  Object.keys(WINNER_TO_THIRD_MATCH).forEach(function (g) { MATCH_TO_WINNER[WINNER_TO_THIRD_MATCH[g]] = g })
   var FEEDERS = {
-    89:[74,77],90:[73,75],91:[76,78],92:[79,80],
-    93:[83,84],94:[81,82],95:[86,88],96:[85,87],
-    97:[89,90],98:[93,94],99:[91,92],100:[95,96],
-    101:[97,98],102:[99,100],104:[101,102],
+    89:[74,77],90:[73,75],91:[76,78],92:[79,80], 93:[83,84],94:[81,82],95:[86,88],96:[85,87],
+    97:[89,90],98:[93,94],99:[91,92],100:[95,96], 101:[97,98],102:[99,100],104:[101,102],
   }
   var PARENT = {}
-  Object.keys(FEEDERS).forEach(function (p) {
-    FEEDERS[p].forEach(function (k) { PARENT[k] = +p })
-  })
-  var ROUND_LABEL = { R32:'Sechzehntelfinale', R16:'Achtelfinale', QF:'Viertelfinale', SF:'Halbfinale', F:'Finale' }
+  Object.keys(FEEDERS).forEach(function (p) { FEEDERS[p].forEach(function (k) { PARENT[k] = +p }) })
   function roundOf(n){ if(n<=88)return'R32'; if(n<=96)return'R16'; if(n<=100)return'QF'; if(n<=102)return'SF'; return'F' }
 
   // ---------- State ----------
   var KEY = 'wm2026-standalone-v2'
   var state = load()
-  var ui = { group:'A', myTeam:'', live:true, lastUpdate:'', liveError:false }
+  var ui = { group:'A', myTeam:'', live:true, lastUpdate:'', liveError:false, lang: loadLang() }
+  function loadLang(){ try{ return localStorage.getItem(LANGKEY)||'de' }catch(e){ return 'de' } }
+  function saveLang(){ try{ localStorage.setItem(LANGKEY, ui.lang) }catch(e){} }
 
-  // Echte WM-2026-Auslosung + aktueller Spielstand (aus WC2026, vom Build injiziert).
   function seed(){
     var teams=[], matches=[]
     GROUPS.forEach(function(g){
-      var data=WC2026.groups[g]
-      var idByName={}
+      var data=WC2026.groups[g], idByName={}
       data.teams.forEach(function(name,i){ teams.push({id:g+(i+1),name:name,group:g,fairPlay:0}); idByName[name]=g+(i+1) })
       data.matches.forEach(function(m,i){ matches.push({id:g+(i+1),group:g,home:idByName[m[0]],away:idByName[m[1]],hg:m[2],ag:m[3]}) })
     })
@@ -5468,7 +5585,8 @@ var WC2026 = {
   function save(){ try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){} }
 
   function teamsOfGroup(g){ return state.teams.filter(function(t){return t.group===g}) }
-  function nameOf(id){ var t=state.teams.find(function(x){return x.id===id}); return t?t.name:id }
+  // Anzeige-Name: lokalisiert (oder editierter Name, falls vom Nutzer geändert)
+  function nameOf(id){ var x=state.teams.find(function(t){return t.id===id}); return x?locName(x.name):id }
   function fairPlayMap(g){ var m={}; teamsOfGroup(g).forEach(function(t){m[t.id]=t.fairPlay}); return m }
 
   // ---------- FIFA-Tabellen-Logik ----------
@@ -5487,7 +5605,6 @@ var WC2026 = {
   }
   function cmpOverall(x,y){ return (y.points-x.points)||(y.gd-x.gd)||(y.gf-x.gf) }
   function cmpFair(x,y){ return y.fairPlay-x.fairPlay }
-
   function breakTie(block, matches, fp, lot){
     var h2h=matches.filter(function(m){return block.indexOf(m.home)>=0&&block.indexOf(m.away)>=0})
     var hs=computeStats(block,h2h,fp)
@@ -5517,13 +5634,11 @@ var WC2026 = {
     }
     return order.map(function(id,k){ var s=st[id]; return {team:id,rank:k+1,played:s.played,won:s.won,drawn:s.drawn,lost:s.lost,gf:s.gf,ga:s.ga,gd:s.gd,points:s.points,fairPlay:s.fairPlay,lot:!!lot[id]} })
   }
-
   function allStandings(){
     var out={}
     GROUPS.forEach(function(g){ out[g]=rankGroup([g+1,g+2,g+3,g+4], state.matches.filter(function(m){return m.group===g}), fairPlayMap(g)) })
     return out
   }
-
   function rankThirds(standings){
     var lot={}
     var thirds=GROUPS.map(function(g){ var r=standings[g].find(function(x){return x.rank===3}); return {group:g,team:r} }).filter(function(x){return x.team})
@@ -5539,7 +5654,7 @@ var WC2026 = {
     return thirds.map(function(e,i){ return {team:e.team.team,group:e.group,rank:i+1,played:e.team.played,points:e.team.points,gd:e.team.gd,gf:e.team.gf,fairPlay:e.team.fairPlay,qualifies:i<8,lot:!!lot[e.group]} })
   }
 
-  // ---------- Szenarien: erreichbare Plätze ----------
+  // ---------- Szenarien ----------
   function* outcomes(matches, maxGoals, limit){
     var open=matches.filter(function(m){return m.hg==null||m.ag==null})
     var fixed=matches.filter(function(m){return m.hg!=null&&m.ag!=null})
@@ -5576,11 +5691,10 @@ var WC2026 = {
   // ---------- Bracket ----------
   function thirdAssignment(qualGroups){
     if(qualGroups.length!==8)return null
-    var key=qualGroups.slice().sort().join('')
-    return R32_DATA.combinations[key]||null // values like "3E"
+    return R32_DATA.combinations[qualGroups.slice().sort().join('')]||null
   }
   function buildTeamOf(standings){
-    return function(label){ // '1A','2B','3E'
+    return function(label){
       var pos=+label[0], g=label.slice(1)
       var row=standings[g]&&standings[g].find(function(r){return r.rank===pos})
       return row?nameOf(row.team):label
@@ -5591,8 +5705,7 @@ var WC2026 = {
     function lab(s,n){
       if(s.t==='w')return teamOf('1'+s.g)
       if(s.t==='r')return teamOf('2'+s.g)
-      var wg=MATCH_TO_WINNER[n]
-      var third=wg?assign['1'+wg]:null // "3X"
+      var wg=MATCH_TO_WINNER[n], third=wg?assign['1'+wg]:null
       return third?teamOf(third):'3.?'
     }
     return R32_MATCHES.map(function(m){ return {n:m.n,round:'R32',home:lab(m.h,m.n),away:lab(m.a,m.n)} })
@@ -5615,78 +5728,73 @@ var WC2026 = {
   // ---------- Rendering ----------
   function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]}) }
   function el(id){ return document.getElementById(id) }
+  function teamCell(id){ return flag(nameOf(id))+esc(nameOf(id)) } // Flagge (per kanon. Name) + lokalisierter Name
+  function teamCellName(name){ return flag(name)+esc(name) }
 
   function renderTabs(){
-    var h=GROUPS.map(function(g){ return '<button data-tab="'+g+'" class="'+(g===ui.group?'active':'')+'">'+g+'</button>' }).join('')
-    el('tabs').innerHTML=h
+    el('tabs').innerHTML = GROUPS.map(function(g){ return '<button data-tab="'+g+'" class="'+(g===ui.group?'active':'')+'">'+g+'</button>' }).join('')
     el('tabs').querySelectorAll('button').forEach(function(b){
       b.addEventListener('click',function(){ ui.group=b.getAttribute('data-tab'); renderTabs(); renderGroupInputs(); renderDerived() })
     })
   }
 
   function renderMyTeamSelect(){
-    var sel=el('myTeam'); var cur=ui.myTeam
-    var h='<option value="">– wählen –</option>'
+    var sel=el('myTeam'); if(!sel)return
+    var h='<option value="">'+esc(t('selectPlaceholder'))+'</option>'
     GROUPS.forEach(function(g){
-      h+='<optgroup label="Gruppe '+g+'">'
-      teamsOfGroup(g).forEach(function(t){ h+='<option value="'+t.id+'">'+flag(t.name)+esc(t.name)+'</option>' })
+      h+='<optgroup label="'+esc(t('group')+' '+g)+'">'
+      teamsOfGroup(g).forEach(function(tm){ h+='<option value="'+tm.id+'">'+flag(nameOf(tm.id))+esc(nameOf(tm.id))+'</option>' })
       h+='</optgroup>'
     })
-    sel.innerHTML=h; sel.value=cur
+    sel.innerHTML=h; sel.value=ui.myTeam
   }
 
   function renderGroupInputs(){
     var g=ui.group, teams=teamsOfGroup(g), matches=state.matches.filter(function(m){return m.group===g})
-    var h='<h2>Ergebnisse – Gruppe '+g+'</h2><div class="matches">'
+    var h='<h2>'+esc(t('resultsHeading')+' – '+t('group')+' '+g)+'</h2><div class="matches">'
     matches.forEach(function(m){
       h+='<div class="match">'
-        +'<span class="tn r">'+flag(nameOf(m.home))+esc(nameOf(m.home))+'</span>'
+        +'<span class="tn r">'+teamCell(m.home)+'</span>'
         +'<input type="number" min="0" data-score="'+m.id+'" data-side="h" value="'+(m.hg==null?'':m.hg)+'">'
         +'<span class="colon">:</span>'
         +'<input type="number" min="0" data-score="'+m.id+'" data-side="a" value="'+(m.ag==null?'':m.ag)+'">'
-        +'<span class="tn">'+flag(nameOf(m.away))+esc(nameOf(m.away))+'</span>'
-        +'</div>'
+        +'<span class="tn">'+teamCell(m.away)+'</span></div>'
     })
-    h+='</div><p class="hint">Leeres Feld = Spiel offen.</p>'
-    h+='<h3>Teams &amp; Fair-Play</h3><table class="teamedit"><tbody>'
-    teams.forEach(function(t){
-      h+='<tr><td><input data-name="'+t.id+'" value="'+esc(t.name)+'"></td>'
-        +'<td class="fp">Fair-Play:<input type="number" data-fp="'+t.id+'" value="'+t.fairPlay+'"></td></tr>'
+    h+='</div><p class="hint">'+esc(t('openHint'))+'</p><p class="hint">'+esc(t('manualHint'))+'</p>'
+    h+='<h3>'+esc(t('teamsFairplay'))+'</h3><table class="teamedit"><tbody>'
+    teams.forEach(function(tm){
+      h+='<tr><td><input data-name="'+tm.id+'" value="'+esc(tm.name)+'"></td>'
+        +'<td class="fp">'+esc(t('fairplay'))+'<input type="number" data-fp="'+tm.id+'" value="'+tm.fairPlay+'"></td></tr>'
     })
     h+='</tbody></table>'
     el('groupInputs').innerHTML=h
 
     el('groupInputs').querySelectorAll('[data-score]').forEach(function(inp){
       inp.addEventListener('input',function(){
-        var id=inp.getAttribute('data-score'), side=inp.getAttribute('data-side')
-        var m=state.matches.find(function(x){return x.id===id})
+        var m=state.matches.find(function(x){return x.id===inp.getAttribute('data-score')})
         var v=inp.value===''?null:Number(inp.value)
-        if(side==='h')m.hg=v; else m.ag=v
-        state.manual[m.id]=true // manuell -> Live überschreibt nicht mehr
+        if(inp.getAttribute('data-side')==='h')m.hg=v; else m.ag=v
+        state.manual[m.id]=true
         save(); renderDerived()
       })
     })
     el('groupInputs').querySelectorAll('[data-name]').forEach(function(inp){
       inp.addEventListener('input',function(){
-        var t=state.teams.find(function(x){return x.id===inp.getAttribute('data-name')})
-        t.name=inp.value; save(); renderDerived()
-        // Gegnernamen in den Match-Zeilen aktualisieren:
-        renderMatchLabels()
+        var tm=state.teams.find(function(x){return x.id===inp.getAttribute('data-name')})
+        tm.name=inp.value; save(); renderMatchLabels(); renderDerived()
       })
     })
     el('groupInputs').querySelectorAll('[data-fp]').forEach(function(inp){
       inp.addEventListener('input',function(){
-        var t=state.teams.find(function(x){return x.id===inp.getAttribute('data-fp')})
-        t.fairPlay=Number(inp.value)||0; save(); renderDerived()
+        var tm=state.teams.find(function(x){return x.id===inp.getAttribute('data-fp')})
+        tm.fairPlay=Number(inp.value)||0; save(); renderDerived()
       })
     })
   }
 
-  // Aktualisiert nur die Teamnamen-Labels in den Match-Zeilen (ohne Inputs neu zu bauen)
   function renderMatchLabels(){
     var matches=state.matches.filter(function(m){return m.group===ui.group})
-    var rows=el('groupInputs').querySelectorAll('.match')
-    rows.forEach(function(row,i){
+    el('groupInputs').querySelectorAll('.match').forEach(function(row,i){
       var m=matches[i]; if(!m)return
       var spans=row.querySelectorAll('.tn')
       spans[0].textContent=flag(nameOf(m.home))+nameOf(m.home); spans[1].textContent=flag(nameOf(m.away))+nameOf(m.away)
@@ -5695,35 +5803,30 @@ var WC2026 = {
   }
 
   function renderDerived(){
-    var standings=allStandings()
-    var thirds=rankThirds(standings)
-    renderStandings(standings)
-    renderThirds(thirds)
-    renderMyTeam(standings,thirds)
-    renderOpponents(standings,thirds)
+    var standings=allStandings(), thirds=rankThirds(standings)
+    renderStandings(standings); renderThirds(thirds); renderMyTeam(standings,thirds); renderOpponents(standings,thirds)
   }
-
   function rowClass(rank,team){ var c=rank<=2?'adv':rank===3?'maybe':'out'; if(ui.myTeam&&team===ui.myTeam)c+=' mine'; return c }
 
   function renderStandings(standings){
     var g=ui.group, rows=standings[g]
-    var h='<h2>Gruppe '+g+' – Tabelle</h2><table class="standings"><thead><tr>'
-      +'<th>#</th><th class="l">Team</th><th>Sp</th><th>S</th><th>U</th><th>N</th><th>Tore</th><th>TD</th><th>Pkt</th></tr></thead><tbody>'
+    var h='<h2>'+esc(t('group')+' '+g+' – '+t('tableWord'))+'</h2><table class="standings"><thead><tr>'
+      +'<th>#</th><th class="l">'+esc(t('col_team'))+'</th><th>'+esc(t('col_mp'))+'</th><th>'+esc(t('col_w'))+'</th><th>'+esc(t('col_d'))+'</th><th>'+esc(t('col_l'))+'</th><th>'+esc(t('col_goals'))+'</th><th>'+esc(t('col_gd'))+'</th><th>'+esc(t('col_pts'))+'</th></tr></thead><tbody>'
     rows.forEach(function(r){
-      h+='<tr class="'+rowClass(r.rank,r.team)+'"><td>'+r.rank+(r.lot?' 🎲':'')+'</td><td class="l">'+flag(nameOf(r.team))+esc(nameOf(r.team))+'</td>'
+      h+='<tr class="'+rowClass(r.rank,r.team)+'"><td>'+r.rank+(r.lot?' 🎲':'')+'</td><td class="l">'+teamCell(r.team)+'</td>'
         +'<td>'+r.played+'</td><td>'+r.won+'</td><td>'+r.drawn+'</td><td>'+r.lost+'</td>'
         +'<td>'+r.gf+':'+r.ga+'</td><td>'+(r.gd>0?'+'+r.gd:r.gd)+'</td><td><b>'+r.points+'</b></td></tr>'
     })
-    h+='</tbody></table><p class="legend"><span class="dot adv"></span> 1./2. → weiter &nbsp;'
-      +'<span class="dot maybe"></span> 3. → evtl. &nbsp;<span class="dot out"></span> raus &nbsp; 🎲 = Los</p>'
+    h+='</tbody></table><p class="legend"><span class="dot adv"></span> '+esc(t('legAdv'))+' &nbsp;'
+      +'<span class="dot maybe"></span> '+esc(t('legMaybe'))+' &nbsp;<span class="dot out"></span> '+esc(t('legOut'))+' &nbsp; '+esc(t('legLot'))+'</p>'
     el('standings').innerHTML=h
   }
 
   function renderThirds(thirds){
-    var h='<h2>Rangliste der Gruppendritten (8 von 12 weiter)</h2><table class="standings"><thead><tr>'
-      +'<th>#</th><th class="l">Team</th><th>Gr.</th><th>Sp</th><th>Pkt</th><th>TD</th><th>Tore</th><th>FP</th><th></th></tr></thead><tbody>'
+    var h='<h2>'+esc(t('thirdsHeading'))+'</h2><table class="standings"><thead><tr>'
+      +'<th>#</th><th class="l">'+esc(t('col_team'))+'</th><th>'+esc(t('col_grp'))+'</th><th>'+esc(t('col_mp'))+'</th><th>'+esc(t('col_pts'))+'</th><th>'+esc(t('col_gd'))+'</th><th>'+esc(t('col_goals'))+'</th><th>'+esc(t('col_fp'))+'</th><th></th></tr></thead><tbody>'
     thirds.forEach(function(e){
-      h+='<tr class="'+(e.qualifies?'adv':'out')+'"><td>'+e.rank+(e.lot?' 🎲':'')+'</td><td class="l">'+flag(nameOf(e.team))+esc(nameOf(e.team))+'</td>'
+      h+='<tr class="'+(e.qualifies?'adv':'out')+'"><td>'+e.rank+(e.lot?' 🎲':'')+'</td><td class="l">'+teamCell(e.team)+'</td>'
         +'<td>'+e.group+'</td><td>'+e.played+'</td><td><b>'+e.points+'</b></td><td>'+(e.gd>0?'+'+e.gd:e.gd)+'</td><td>'+e.gf+'</td><td>'+e.fairPlay+'</td><td>'+(e.qualifies?'✅':'❌')+'</td></tr>'
     })
     h+='</tbody></table>'
@@ -5738,21 +5841,21 @@ var WC2026 = {
     var ms=state.matches.filter(function(m){return m.group===team.group})
     var an=possiblePositions(team.id,ids,ms,fairPlayMap(team.group))
     var pos=standings[team.group].find(function(r){return r.team===team.id})
-    var reach=an.reach
-    var v
-    if(reach.length===0)v={c:'out',t:'Keine Daten'}
-    else if(an.worst<=2)v={c:'adv',t:'Sicher weiter (mind. Platz 2)'}
-    else if(an.best>=4)v={c:'out',t:'Ausgeschieden'}
-    else if(an.best<=2)v={c:'maybe',t:'Weiterkommen möglich (Plätze '+reach.join('/')+')'}
-    else v={c:'maybe',t:'Nur als Gruppendritter möglich (Plätze '+reach.join('/')+')'}
+    var reach=an.reach, v
+    if(reach.length===0)v={c:'out',t:t('verdictNoData')}
+    else if(an.worst<=2)v={c:'adv',t:t('verdictSafe')}
+    else if(an.best>=4)v={c:'out',t:t('verdictOut')}
+    else if(an.best<=2)v={c:'maybe',t:t('verdictMaybeP').replace('{x}',reach.join('/'))}
+    else v={c:'maybe',t:t('verdictThirdOnlyP').replace('{x}',reach.join('/'))}
     var te=thirds.find(function(e){return e.team===team.id})
-    var h='<section class="myteam-panel '+v.c+'"><h2>'+flag(team.name)+esc(team.name)+' <span class="grp">(Gruppe '+team.group+')</span></h2>'
-      +'<div class="verdict">'+v.t+'</div><ul class="facts">'
-      +'<li>Aktueller Platz: <b>'+(pos?pos.rank:'–')+'</b> mit '+(pos?pos.points:0)+' Pkt (TD '+(pos&&pos.gd>0?'+':'')+(pos?pos.gd:0)+')</li>'
-      +'<li>Erreichbare Endplätze: <b>'+(reach.join(', ')||'–')+'</b></li>'
-      +'<li>Durchgerechnete Szenarien: '+an.scenarios.toLocaleString('de')+(an.approx?' (genähert: nur S/U/N)':'')+'</li>'
+    var gdv=(pos&&pos.gd>0?'+':'')+(pos?pos.gd:0)
+    var h='<section class="myteam-panel '+v.c+'"><h2>'+teamCellName(nameOf(team.id))+' <span class="grp">('+esc(t('group')+' '+team.group)+')</span></h2>'
+      +'<div class="verdict">'+esc(v.t)+'</div><ul class="facts">'
+      +'<li>'+esc(t('lblPosition'))+' <b>'+(pos?pos.rank:'–')+'</b> · '+(pos?pos.points:0)+' '+esc(t('col_pts'))+' · '+esc(t('col_gd'))+' '+gdv+'</li>'
+      +'<li>'+esc(t('factReachable'))+': <b>'+(reach.join(', ')||'–')+'</b></li>'
+      +'<li>'+esc(t('factScenarios'))+': '+an.scenarios.toLocaleString(ui.lang)+(an.approx?' '+esc(t('approxNote')):'')+'</li>'
     if(reach.indexOf(3)>=0){
-      h+='<li>Als Dritter aktuell Rang <b>'+(te?te.rank:'–')+'/12</b> → '+(te&&te.qualifies?'unter den besten 8 ✅':'NICHT unter den besten 8 ❌')+'</li>'
+      h+='<li>'+esc(t('asThird'))+' <b>'+(te?te.rank:'–')+'/12</b> → '+esc(te&&te.qualifies?t('top8yes'):t('top8no'))+'</li>'
     }
     h+='</ul></section>'
     box.innerHTML=h
@@ -5762,74 +5865,64 @@ var WC2026 = {
     var qual=thirds.filter(function(e){return e.qualifies}).map(function(e){return e.group})
     var resolved=null
     if(qual.length===8) resolved=resolveR32(qual,buildTeamOf(standings))
-    var h='<h2>Mögliche Gegner (K.-o.-Phase)</h2>'
-    if(!resolved){ h+='<div class="notice">Bracket konnte nicht aufgelöst werden.</div>'; el('opponents').innerHTML=h; return }
-    h+='<p class="hint">Basierend auf der <b>aktuellen Tabelle</b> (1./2. + die 8 besten Dritten). R32-Gegner steht fest; ab Achtelfinale = mögliche Gegner.</p>'
+    var h='<h2>'+esc(t('oppHeading'))+'</h2>'
+    if(!resolved){ h+='<div class="notice">'+esc(t('bracketUnresolved'))+'</div>'; el('opponents').innerHTML=h; return }
+    h+='<p class="hint">'+esc(t('oppHint'))+'</p>'
     var myName=ui.myTeam?nameOf(ui.myTeam):''
     if(ui.myTeam){
       var path=opponentPath(myName,resolved)
-      h+='<div class="mypath"><h3>Weg von '+flag(myName)+esc(myName)+'</h3>'
+      h+='<div class="mypath"><h3>'+esc(t('wayOf'))+' '+teamCellName(myName)+'</h3>'
       if(path){
-        h+='<ol class="path"><li><span class="r">Sechzehntelfinale (R32)</span><span class="opp">vs '+flag(path.r32Opponent)+esc(path.r32Opponent)+'</span></li>'
+        h+='<ol class="path"><li><span class="r">'+esc(roundLabel('R32')+' (R32)')+'</span><span class="opp">'+esc(t('vsWord'))+' '+teamCellName(path.r32Opponent)+'</span></li>'
         path.rounds.forEach(function(r){
-          h+='<li><span class="r">'+ROUND_LABEL[r.round]+'</span><span class="opp">'+(r.opponents.length===1?'vs ':'mögl. Gegner: ')+r.opponents.map(function(o){return flag(o)+esc(o)}).join(', ')+'</span></li>'
+          h+='<li><span class="r">'+esc(roundLabel(r.round))+'</span><span class="opp">'+(r.opponents.length===1?esc(t('vsWord'))+' ':esc(t('possOpp'))+' ')+r.opponents.map(teamCellName).join(', ')+'</span></li>'
         })
         h+='</ol>'
       } else {
-        h+='<p class="notice">'+flag(myName)+esc(myName)+' ist nach aktueller Tabelle <b>nicht im Achtelfinale</b>.</p>'
+        h+='<p class="notice">'+teamCellName(myName)+' '+esc(t('notInR16'))+'</p>'
       }
       h+='</div>'
     }
-    h+='<h3>Komplettes Sechzehntelfinale (R32)</h3><table class="bracket"><tbody>'
+    h+='<h3>'+esc(t('fullR32'))+'</h3><table class="bracket"><tbody>'
     resolved.forEach(function(m){
       var mine=(m.home===myName||m.away===myName)?' class="mine"':''
-      h+='<tr'+mine+'><td class="mno">#'+m.n+'</td><td class="r">'+flag(m.home)+esc(m.home)+'</td><td class="vs">–</td><td class="l">'+flag(m.away)+esc(m.away)+'</td></tr>'
+      h+='<tr'+mine+'><td class="mno">#'+m.n+'</td><td class="r">'+teamCellName(m.home)+'</td><td class="vs">–</td><td class="l">'+teamCellName(m.away)+'</td></tr>'
     })
     h+='</tbody></table>'
     el('opponents').innerHTML=h
   }
 
-  // ---------- Live-Abruf ----------
+  // ---------- Live ----------
   function findMatch(g, idA, idB){
-    return state.matches.find(function(m){
-      return m.group===g && ((m.home===idA&&m.away===idB)||(m.home===idB&&m.away===idA))
-    })
+    return state.matches.find(function(m){ return m.group===g && ((m.home===idA&&m.away===idB)||(m.home===idB&&m.away===idA)) })
   }
   function nowStr(){ var d=new Date(); function p(n){return(n<10?'0':'')+n} return p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds()) }
-
-  // Setzt die Score-Inputs der aktuellen Gruppe auf den State-Wert (ohne Inputs neu zu bauen).
   function updateScoreInputs(){
     el('groupInputs').querySelectorAll('[data-score]').forEach(function(inp){
-      if(inp===document.activeElement) return // nicht überschreiben, während getippt wird
-      var m=state.matches.find(function(x){return x.id===inp.getAttribute('data-score')})
-      if(!m)return
+      if(inp===document.activeElement) return
+      var m=state.matches.find(function(x){return x.id===inp.getAttribute('data-score')}); if(!m)return
       var v=inp.getAttribute('data-side')==='h'?m.hg:m.ag
       inp.value=(v==null?'':v)
     })
   }
   function renderLiveStatus(){
     var s=el('liveStatus'); if(!s)return
-    if(!ui.live){ s.textContent='Live aus'; return }
-    var t=ui.lastUpdate?('aktualisiert '+ui.lastUpdate):'lade…'
-    s.textContent=(ui.liveError?'⚠ keine Verbindung – gespeicherter Stand · ':'🔴 Live · ')+t
+    if(!ui.live){ s.textContent=t('liveOff'); return }
+    var u=ui.lastUpdate?(t('liveUpdated')+' '+ui.lastUpdate):t('liveLoading')
+    s.textContent=(ui.liveError?t('liveNoConn')+' · ':'🔴 Live · ')+u
   }
-
-  // Holt die letzten beendeten WM-Spiele und überträgt Ergebnisse ins Modell.
   function applyLive(){
     if(!ui.live) return Promise.resolve(false)
     return fetch(API_BASE+'eventspast.php?id='+WC_LEAGUE)
       .then(function(r){ return r.json() })
       .then(function(d){
-        var ev=(d&&d.events)||[]; var changed=false
+        var ev=(d&&d.events)||[], changed=false
         ev.forEach(function(e){
           if(String(e.idLeague)!==String(WC_LEAGUE)) return
           if(e.intHomeScore==null||e.intAwayScore==null||e.intHomeScore===''||e.intAwayScore==='') return
           var hid=ALIAS_TO_ID[norm(e.strHomeTeam)], aid=ALIAS_TO_ID[norm(e.strAwayTeam)]
-          if(!hid||!aid) return
-          if(hid.charAt(0)!==aid.charAt(0)) return // unterschiedliche Gruppen -> K.o.-Spiel, ignorieren
-          var g=hid.charAt(0)
-          var m=findMatch(g,hid,aid); if(!m) return
-          if(state.manual[m.id]) return // manuelle Eingabe hat Vorrang
+          if(!hid||!aid||hid.charAt(0)!==aid.charAt(0)) return
+          var m=findMatch(hid.charAt(0),hid,aid); if(!m||state.manual[m.id]) return
           var hg,ag
           if(m.home===hid){ hg=+e.intHomeScore; ag=+e.intAwayScore } else { hg=+e.intAwayScore; ag=+e.intHomeScore }
           if(m.hg!==hg||m.ag!==ag){ m.hg=hg; m.ag=ag; changed=true }
@@ -5842,10 +5935,29 @@ var WC2026 = {
       .catch(function(){ ui.liveError=true; renderLiveStatus(); return false })
   }
 
-  // ---------- Init ----------
-  function init(){
-    renderMyTeamSelect()
-    el('myTeam').addEventListener('change',function(){ ui.myTeam=this.value; renderDerived(); renderStandings(allStandings()) })
+  // ---------- Header / Init ----------
+  function renderHeader(){
+    el('hdr').innerHTML =
+      '<h1>'+esc(t('appTitle'))+'</h1>'
+      +'<p class="sub">'+esc(t('subtitle'))+'</p>'
+      +'<div class="toolbar">'
+      +  '<label class="myteam">'+esc(t('lblMyTeam'))+' <select id="myTeam"></select></label>'
+      +  '<label class="lang">'+esc(t('lblLang'))+' <select id="langSel"><option value="de">Deutsch</option><option value="en">English</option><option value="es">Español</option></select></label>'
+      +  '<label class="live"><input type="checkbox" id="liveToggle"> 🔴 '+esc(t('lblLive'))+'</label>'
+      +  '<button id="btnRefresh">'+esc(t('refreshNow'))+'</button>'
+      +  '<span id="liveStatus" class="hint"></span>'
+      +  '<button id="btnClear">'+esc(t('clearResults'))+'</button>'
+      +  '<button id="btnReset">'+esc(t('resetLive'))+'</button>'
+      +'</div>'
+      +'<p class="hint disclaimer">'+esc(t('liveDisclaimer'))+'</p>'
+    document.title = t('appTitle').replace(/^[^A-Za-z0-9]+/,'')
+
+    el('myTeam').addEventListener('change',function(){ ui.myTeam=this.value; renderDerived() })
+    var ls=el('langSel'); ls.value=ui.lang
+    ls.addEventListener('change',function(){ ui.lang=this.value; saveLang(); renderAll() })
+    var tg=el('liveToggle'); tg.checked=ui.live
+    tg.addEventListener('change',function(){ ui.live=tg.checked; renderLiveStatus(); if(ui.live)applyLive() })
+    el('btnRefresh').addEventListener('click',function(){ applyLive() })
     el('btnClear').addEventListener('click',function(){
       state.matches.forEach(function(m){ m.hg=null; m.ag=null; state.manual[m.id]=true })
       save(); renderGroupInputs(); renderDerived()
@@ -5853,12 +5965,13 @@ var WC2026 = {
     el('btnReset').addEventListener('click',function(){
       state=seed(); save(); ui.myTeam=''; renderMyTeamSelect(); renderGroupInputs(); renderDerived(); applyLive()
     })
-    var tg=el('liveToggle')
-    if(tg){ tg.checked=ui.live; tg.addEventListener('change',function(){ ui.live=tg.checked; renderLiveStatus(); if(ui.live)applyLive() }) }
-    var rf=el('btnRefresh'); if(rf)rf.addEventListener('click',function(){ applyLive() })
+    renderMyTeamSelect(); renderLiveStatus()
+  }
 
-    renderTabs(); renderGroupInputs(); renderDerived(); renderLiveStatus()
-    // Live: sofort + alle 45s
+  function renderAll(){ renderHeader(); renderTabs(); renderGroupInputs(); renderDerived() }
+
+  function init(){
+    renderAll()
     applyLive()
     setInterval(applyLive, 45000)
   }

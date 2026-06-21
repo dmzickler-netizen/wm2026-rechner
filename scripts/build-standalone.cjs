@@ -21,18 +21,7 @@ ${css}
 </head>
 <body>
 <div class="app">
-  <header>
-    <h1>⚽ WM 2026 – Gegner-Rechner</h1>
-    <p class="sub">Echte Auslosung + Live-Ergebnisse. Tabellen, FIFA-Tiebreaker und mögliche Gegner. Live-Daten von TheSportsDB; bei fehlender Verbindung wird der gespeicherte Stand gezeigt. Ergebnisse lassen sich jederzeit manuell überschreiben.</p>
-    <div class="toolbar">
-      <label class="myteam">Mein Team: <select id="myTeam"></select></label>
-      <label class="live"><input type="checkbox" id="liveToggle"> 🔴 Live</label>
-      <button id="btnRefresh">Jetzt aktualisieren</button>
-      <span id="liveStatus" class="hint"></span>
-      <button id="btnClear">Ergebnisse leeren</button>
-      <button id="btnReset">Auf echten Stand zurücksetzen</button>
-    </div>
-  </header>
+  <header id="hdr"></header>
   <div id="myteam"></div>
   <nav class="tabs" id="tabs"></nav>
   <section id="groupInputs"></section>
