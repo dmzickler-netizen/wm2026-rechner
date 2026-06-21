@@ -14,7 +14,7 @@
       subtitle: 'Echte Auslosung + Live-Ergebnisse. Tabellen, FIFA-Tiebreaker und mögliche Gegner. Ergebnisse jederzeit manuell überschreibbar.',
       lblMyTeam: 'Mein Team:', selectPlaceholder: '– wählen –', lblLang: 'Sprache:', lblLive: 'Live',
       refreshNow: 'Jetzt aktualisieren', clearResults: 'Ergebnisse leeren', resetLive: 'Auf echten Stand zurücksetzen',
-      liveDisclaimer: '⏱ Ergebnisse werden automatisch geladen (alle ~45 s) und spiegeln beendete Spiele wider – kein offizieller Sekunden-Ticker, kurze Verzögerung möglich.',
+      liveDisclaimer: '⏱ Ergebnisse werden automatisch geladen (alle ~60 s) und spiegeln beendete Spiele wider – kein offizieller Sekunden-Ticker, kurze Verzögerung möglich.',
       liveOff: 'Live aus', liveUpdated: 'aktualisiert', liveLoading: 'lädt…', liveNoConn: '⚠ keine Verbindung – gespeicherter Stand',
       group: 'Gruppe', resultsHeading: 'Ergebnisse', openHint: 'Leeres Feld = Spiel offen.',
       manualHint: 'Tipp: Eigene/hypothetische Ergebnisse eintippen – diese werden von der Live-Aktualisierung nicht überschrieben.',
@@ -39,7 +39,7 @@
       subtitle: 'Real draw + live results. Tables, FIFA tiebreakers and possible opponents. You can override any result manually.',
       lblMyTeam: 'My team:', selectPlaceholder: '– select –', lblLang: 'Language:', lblLive: 'Live',
       refreshNow: 'Refresh now', clearResults: 'Clear results', resetLive: 'Reset to live data',
-      liveDisclaimer: '⏱ Results load automatically (every ~45 s) and reflect finished matches – not an official live ticker, short delay possible.',
+      liveDisclaimer: '⏱ Results load automatically (every ~60 s) and reflect finished matches – not an official live ticker, short delay possible.',
       liveOff: 'Live off', liveUpdated: 'updated', liveLoading: 'loading…', liveNoConn: '⚠ no connection – saved data',
       group: 'Group', resultsHeading: 'Results', openHint: 'Empty field = match not played.',
       manualHint: 'Tip: type your own/hypothetical results – live updates will not overwrite them.',
@@ -64,7 +64,7 @@
       subtitle: 'Sorteo real + resultados en vivo. Tablas, criterios de desempate FIFA y posibles rivales. Puedes sobrescribir cualquier resultado manualmente.',
       lblMyTeam: 'Mi equipo:', selectPlaceholder: '– elegir –', lblLang: 'Idioma:', lblLive: 'En vivo',
       refreshNow: 'Actualizar ahora', clearResults: 'Borrar resultados', resetLive: 'Restablecer datos reales',
-      liveDisclaimer: '⏱ Los resultados se cargan automáticamente (cada ~45 s) y reflejan partidos finalizados – no es un marcador oficial en vivo, puede haber un pequeño retraso.',
+      liveDisclaimer: '⏱ Los resultados se cargan automáticamente (cada ~60 s) y reflejan partidos finalizados – no es un marcador oficial en vivo, puede haber un pequeño retraso.',
       liveOff: 'En vivo: apagado', liveUpdated: 'actualizado', liveLoading: 'cargando…', liveNoConn: '⚠ sin conexión – datos guardados',
       group: 'Grupo', resultsHeading: 'Resultados', openHint: 'Campo vacío = partido pendiente.',
       manualHint: 'Consejo: escribe tus propios resultados/hipotéticos – la actualización en vivo no los sobrescribe.',
@@ -484,28 +484,46 @@
     var u=ui.lastUpdate?(t('liveUpdated')+' '+ui.lastUpdate):t('liveLoading')
     s.textContent=(ui.liveError?t('liveNoConn')+' · ':'🔴 Live · ')+u
   }
-  function applyLive(){
+  // Überträgt eine Liste API-Events ins Modell. Gibt true zurück, wenn sich etwas geändert hat.
+  function applyEvents(list){
+    var changed=false
+    list.forEach(function(e){
+      if(!e) return
+      if(String(e.idLeague)!==String(WC_LEAGUE)) return
+      if(e.intHomeScore==null||e.intAwayScore==null||e.intHomeScore===''||e.intAwayScore==='') return
+      var hid=ALIAS_TO_ID[norm(e.strHomeTeam)], aid=ALIAS_TO_ID[norm(e.strAwayTeam)]
+      if(!hid||!aid||hid.charAt(0)!==aid.charAt(0)) return
+      var m=findMatch(hid.charAt(0),hid,aid); if(!m||state.manual[m.id]) return
+      var hg,ag
+      if(m.home===hid){ hg=+e.intHomeScore; ag=+e.intAwayScore } else { hg=+e.intAwayScore; ag=+e.intHomeScore }
+      if(m.hg!==hg||m.ag!==ag){ m.hg=hg; m.ag=ag; changed=true }
+    })
+    return changed
+  }
+  function fetchEvents(url){
+    return fetch(url).then(function(r){ return r.json() }).then(function(d){ return (d&&d.events)||[] }).catch(function(){ return null })
+  }
+  // Gruppenphase 11.–27.06.2026: pro Tag wenige Spiele -> kein API-Limit, vollständig.
+  function ymd2(d){ function p(n){return(n<10?'0':'')+n} return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()) }
+  function dateRange(a,b){ var out=[],d=new Date(a+'T00:00:00'),e=new Date(b+'T00:00:00'); while(d<=e){ out.push(ymd2(d)); d.setDate(d.getDate()+1) } return out }
+  var ALL_DATES = dateRange('2026-06-11','2026-06-27')
+  function recentDates(){ var today=ymd2(new Date()); var past=ALL_DATES.filter(function(x){return x<=today}); return (past.length?past:ALL_DATES).slice(-3) }
+
+  // full=true: alle Spieltage (Start/Manuell). full=false: nur die letzten Tage (Intervall).
+  function applyLive(full){
     if(!ui.live) return Promise.resolve(false)
-    return fetch(API_BASE+'eventspast.php?id='+WC_LEAGUE)
-      .then(function(r){ return r.json() })
-      .then(function(d){
-        var ev=(d&&d.events)||[], changed=false
-        ev.forEach(function(e){
-          if(String(e.idLeague)!==String(WC_LEAGUE)) return
-          if(e.intHomeScore==null||e.intAwayScore==null||e.intHomeScore===''||e.intAwayScore==='') return
-          var hid=ALIAS_TO_ID[norm(e.strHomeTeam)], aid=ALIAS_TO_ID[norm(e.strAwayTeam)]
-          if(!hid||!aid||hid.charAt(0)!==aid.charAt(0)) return
-          var m=findMatch(hid.charAt(0),hid,aid); if(!m||state.manual[m.id]) return
-          var hg,ag
-          if(m.home===hid){ hg=+e.intHomeScore; ag=+e.intAwayScore } else { hg=+e.intAwayScore; ag=+e.intHomeScore }
-          if(m.hg!==hg||m.ag!==ag){ m.hg=hg; m.ag=ag; changed=true }
-        })
-        ui.liveError=false; ui.lastUpdate=nowStr()
-        if(changed){ save(); updateScoreInputs(); renderDerived() }
-        renderLiveStatus()
-        return changed
-      })
-      .catch(function(){ ui.liveError=true; renderLiveStatus(); return false })
+    var dates = full ? ALL_DATES : recentDates()
+    var urls = dates.map(function(d){ return API_BASE+'eventsday.php?d='+d+'&s=Soccer' })
+    urls.push(API_BASE+'eventspast.php?id='+WC_LEAGUE) // zusätzliche Frische
+    return Promise.all(urls.map(fetchEvents)).then(function(lists){
+      var ok = lists.some(function(x){ return x!==null })
+      var all=[]; lists.forEach(function(x){ if(x) all=all.concat(x) })
+      var changed = applyEvents(all)
+      if(ok){ ui.liveError=false; ui.lastUpdate=nowStr() } else { ui.liveError=true }
+      if(changed){ save(); updateScoreInputs(); renderDerived() }
+      renderLiveStatus()
+      return changed
+    })
   }
 
   // ---------- Header / Init ----------
@@ -533,14 +551,14 @@
     var ls=el('langSel'); ls.value=ui.lang
     ls.addEventListener('change',function(){ ui.lang=this.value; saveLang(); renderAll() })
     var tg=el('liveToggle'); tg.checked=ui.live
-    tg.addEventListener('change',function(){ ui.live=tg.checked; renderLiveStatus(); if(ui.live)applyLive() })
-    el('btnRefresh').addEventListener('click',function(){ applyLive() })
+    tg.addEventListener('change',function(){ ui.live=tg.checked; renderLiveStatus(); if(ui.live)applyLive(true) })
+    el('btnRefresh').addEventListener('click',function(){ applyLive(true) })
     el('btnClear').addEventListener('click',function(){
       state.matches.forEach(function(m){ m.hg=null; m.ag=null; state.manual[m.id]=true })
       save(); renderGroupInputs(); renderDerived()
     })
     el('btnReset').addEventListener('click',function(){
-      state=seed(); save(); ui.myTeam=''; renderMyTeamSelect(); renderGroupInputs(); renderDerived(); applyLive()
+      state=seed(); save(); ui.myTeam=''; renderMyTeamSelect(); renderGroupInputs(); renderDerived(); applyLive(true)
     })
     renderMyTeamSelect(); renderLiveStatus()
   }
@@ -549,8 +567,8 @@
 
   function init(){
     renderAll()
-    applyLive()
-    setInterval(applyLive, 45000)
+    applyLive(true)            // Start: alle Spieltage (vollständig)
+    setInterval(function(){ applyLive(false) }, 60000) // Intervall: nur letzte Tage
   }
   init()
 })()
