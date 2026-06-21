@@ -500,30 +500,31 @@
     })
     return changed
   }
-  function fetchEvents(url){
-    return fetch(url).then(function(r){ return r.json() }).then(function(d){ return (d&&d.events)||[] }).catch(function(){ return null })
+  // Endergebnis eines OpenLigaDB-Spiels (resultTypeID 2 = Endergebnis, sonst letztes).
+  function finalResult(m){
+    var rs=m.matchResults||[]; if(!rs.length) return null
+    return rs.filter(function(r){return r.resultTypeID===2})[0] || rs[rs.length-1]
   }
-  // Gruppenphase 11.–27.06.2026: pro Tag wenige Spiele -> kein API-Limit, vollständig.
-  function ymd2(d){ function p(n){return(n<10?'0':'')+n} return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()) }
-  function dateRange(a,b){ var out=[],d=new Date(a+'T00:00:00'),e=new Date(b+'T00:00:00'); while(d<=e){ out.push(ymd2(d)); d.setDate(d.getDate()+1) } return out }
-  var ALL_DATES = dateRange('2026-06-11','2026-06-27')
-  function recentDates(){ var today=ymd2(new Date()); var past=ALL_DATES.filter(function(x){return x<=today}); return (past.length?past:ALL_DATES).slice(-3) }
-
-  // full=true: alle Spieltage (Start/Manuell). full=false: nur die letzten Tage (Intervall).
-  function applyLive(full){
+  // Quelle: OpenLigaDB (kostenlos, kein Key, CORS offen). Eine Abfrage = ALLE Spiele.
+  var OLDB_URL = 'https://api.openligadb.de/getmatchdata/wm2026/2026'
+  function applyLive(){
     if(!ui.live) return Promise.resolve(false)
-    var dates = full ? ALL_DATES : recentDates()
-    var urls = dates.map(function(d){ return API_BASE+'eventsday.php?d='+d+'&s=Soccer' })
-    urls.push(API_BASE+'eventspast.php?id='+WC_LEAGUE) // zusätzliche Frische
-    return Promise.all(urls.map(fetchEvents)).then(function(lists){
-      var ok = lists.some(function(x){ return x!==null })
-      var all=[]; lists.forEach(function(x){ if(x) all=all.concat(x) })
-      var changed = applyEvents(all)
-      if(ok){ ui.liveError=false; ui.lastUpdate=nowStr() } else { ui.liveError=true }
+    return fetch(OLDB_URL).then(function(r){ return r.json() }).then(function(data){
+      if(!Array.isArray(data)) throw new Error('bad data')
+      var evs=[]
+      data.forEach(function(m){
+        if(!m.matchIsFinished) return
+        var fin=finalResult(m); if(!fin||fin.pointsTeam1==null||fin.pointsTeam2==null) return
+        evs.push({ idLeague:WC_LEAGUE,
+          strHomeTeam:(m.team1&&m.team1.teamName)||'', strAwayTeam:(m.team2&&m.team2.teamName)||'',
+          intHomeScore:fin.pointsTeam1, intAwayScore:fin.pointsTeam2 })
+      })
+      var changed=applyEvents(evs)
+      ui.liveError=false; ui.lastUpdate=nowStr()
       if(changed){ save(); updateScoreInputs(); renderDerived() }
       renderLiveStatus()
       return changed
-    })
+    }).catch(function(){ ui.liveError=true; renderLiveStatus(); return false })
   }
 
   // ---------- Header / Init ----------
