@@ -41,4 +41,7 @@ ${app}
 `
 
 fs.writeFileSync(path.join(root, 'vorschau.html'), html)
-console.log('vorschau.html gebaut:', html.length, 'bytes')
+// Für GitHub Pages: gleiche Seite als docs/index.html (Start-URL zeigt die App).
+fs.mkdirSync(path.join(root, 'docs'), { recursive: true })
+fs.writeFileSync(path.join(root, 'docs/index.html'), html)
+console.log('vorschau.html + docs/index.html gebaut:', html.length, 'bytes')
