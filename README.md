@@ -20,7 +20,18 @@ die Rangfolge.
   die **möglichen Gegner** in Achtel-, Viertel-, Halbfinale und Finale
   (Sieger des jeweiligen Bracket-Asts).
 
-## Setup
+## Schnellstart ohne Installation (empfohlen)
+
+Doppelklick auf **`vorschau.html`** – öffnet die komplette App im Browser,
+**ohne npm/Node/Server**, läuft offline. Enthält dieselbe Logik und dieselben
+FIFA-Daten wie die Vite-Version.
+
+> `vorschau.html` wird aus `src/styles.css`, `src/r32-combinations.json` und
+> `standalone/app.js` zusammengebaut. Bei Änderungen an diesen Dateien neu
+> erzeugen (siehe `standalone/app.js`-Kopf bzw. den Build-Einzeiler in der
+> Git-History).
+
+## Setup (Vite-Variante, für Weiterentwicklung)
 
 > ⚠️ Auf diesem Rechner ist `npm` aktuell kaputt
 > (`Cannot find module .../npm-cli.js`). Erst Node/npm sauber neu installieren
