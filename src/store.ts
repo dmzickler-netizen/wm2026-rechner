@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { buildSeedMatches, buildSeedTeams } from './data/seed'
 import type { Match, Team, TeamId } from './fifa/types'
 
-const STORAGE_KEY = 'wm2026-state-v1'
+const STORAGE_KEY = 'wm2026-state-v2'
 
 interface State {
   teams: Team[]

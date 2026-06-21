@@ -1,0 +1,137 @@
+{
+  "_source": "Auslosung + Ergebnisse laut Wikipedia '2026 FIFA World Cup Group A–L', abgerufen 2026-06-21. Spiele ohne Ergebnis = noch nicht gespielt (null).",
+  "groups": {
+    "A": {
+      "teams": ["Mexiko", "Südafrika", "Südkorea", "Tschechien"],
+      "matches": [
+        ["Mexiko", "Südafrika", 2, 0],
+        ["Südkorea", "Tschechien", 2, 1],
+        ["Tschechien", "Südafrika", 1, 1],
+        ["Mexiko", "Südkorea", 1, 0],
+        ["Tschechien", "Mexiko", null, null],
+        ["Südafrika", "Südkorea", null, null]
+      ]
+    },
+    "B": {
+      "teams": ["Kanada", "Bosnien-Herzegowina", "Katar", "Schweiz"],
+      "matches": [
+        ["Kanada", "Bosnien-Herzegowina", 1, 1],
+        ["Katar", "Schweiz", 1, 1],
+        ["Schweiz", "Bosnien-Herzegowina", 4, 1],
+        ["Kanada", "Katar", 6, 0],
+        ["Schweiz", "Kanada", null, null],
+        ["Bosnien-Herzegowina", "Katar", null, null]
+      ]
+    },
+    "C": {
+      "teams": ["Brasilien", "Marokko", "Haiti", "Schottland"],
+      "matches": [
+        ["Brasilien", "Marokko", 1, 1],
+        ["Haiti", "Schottland", 0, 1],
+        ["Schottland", "Marokko", 0, 1],
+        ["Brasilien", "Haiti", 3, 0],
+        ["Schottland", "Brasilien", null, null],
+        ["Marokko", "Haiti", null, null]
+      ]
+    },
+    "D": {
+      "teams": ["USA", "Paraguay", "Australien", "Türkei"],
+      "matches": [
+        ["USA", "Paraguay", 4, 1],
+        ["Australien", "Türkei", 2, 0],
+        ["USA", "Australien", 2, 0],
+        ["Türkei", "Paraguay", 0, 1],
+        ["Türkei", "USA", null, null],
+        ["Paraguay", "Australien", null, null]
+      ]
+    },
+    "E": {
+      "teams": ["Deutschland", "Curaçao", "Elfenbeinküste", "Ecuador"],
+      "matches": [
+        ["Deutschland", "Curaçao", 7, 1],
+        ["Elfenbeinküste", "Ecuador", 1, 0],
+        ["Deutschland", "Elfenbeinküste", 2, 1],
+        ["Ecuador", "Curaçao", 0, 0],
+        ["Curaçao", "Elfenbeinküste", null, null],
+        ["Ecuador", "Deutschland", null, null]
+      ]
+    },
+    "F": {
+      "teams": ["Niederlande", "Japan", "Schweden", "Tunesien"],
+      "matches": [
+        ["Niederlande", "Japan", 2, 2],
+        ["Schweden", "Tunesien", 5, 1],
+        ["Niederlande", "Schweden", 5, 1],
+        ["Tunesien", "Japan", 0, 4],
+        ["Japan", "Schweden", null, null],
+        ["Tunesien", "Niederlande", null, null]
+      ]
+    },
+    "G": {
+      "teams": ["Belgien", "Ägypten", "Iran", "Neuseeland"],
+      "matches": [
+        ["Belgien", "Ägypten", 1, 1],
+        ["Iran", "Neuseeland", 2, 2],
+        ["Belgien", "Iran", null, null],
+        ["Neuseeland", "Ägypten", null, null],
+        ["Ägypten", "Iran", null, null],
+        ["Neuseeland", "Belgien", null, null]
+      ]
+    },
+    "H": {
+      "teams": ["Spanien", "Kap Verde", "Saudi-Arabien", "Uruguay"],
+      "matches": [
+        ["Spanien", "Kap Verde", 0, 0],
+        ["Saudi-Arabien", "Uruguay", 1, 1],
+        ["Spanien", "Saudi-Arabien", null, null],
+        ["Uruguay", "Kap Verde", null, null],
+        ["Kap Verde", "Saudi-Arabien", null, null],
+        ["Uruguay", "Spanien", null, null]
+      ]
+    },
+    "I": {
+      "teams": ["Frankreich", "Senegal", "Irak", "Norwegen"],
+      "matches": [
+        ["Frankreich", "Senegal", 3, 1],
+        ["Irak", "Norwegen", 1, 4],
+        ["Frankreich", "Irak", null, null],
+        ["Norwegen", "Senegal", null, null],
+        ["Norwegen", "Frankreich", null, null],
+        ["Senegal", "Irak", null, null]
+      ]
+    },
+    "J": {
+      "teams": ["Argentinien", "Algerien", "Österreich", "Jordanien"],
+      "matches": [
+        ["Argentinien", "Algerien", 3, 0],
+        ["Österreich", "Jordanien", 3, 1],
+        ["Argentinien", "Österreich", null, null],
+        ["Jordanien", "Algerien", null, null],
+        ["Algerien", "Österreich", null, null],
+        ["Jordanien", "Argentinien", null, null]
+      ]
+    },
+    "K": {
+      "teams": ["Portugal", "DR Kongo", "Usbekistan", "Kolumbien"],
+      "matches": [
+        ["Portugal", "DR Kongo", 1, 1],
+        ["Usbekistan", "Kolumbien", 1, 3],
+        ["Portugal", "Usbekistan", null, null],
+        ["Kolumbien", "DR Kongo", null, null],
+        ["Kolumbien", "Portugal", null, null],
+        ["DR Kongo", "Usbekistan", null, null]
+      ]
+    },
+    "L": {
+      "teams": ["England", "Kroatien", "Ghana", "Panama"],
+      "matches": [
+        ["England", "Kroatien", 4, 2],
+        ["Ghana", "Panama", 1, 0],
+        ["England", "Ghana", null, null],
+        ["Panama", "Kroatien", null, null],
+        ["Panama", "England", null, null],
+        ["Kroatien", "Ghana", null, null]
+      ]
+    }
+  }
+}

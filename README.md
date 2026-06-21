@@ -65,7 +65,8 @@ src/fifa/scenarios.ts   Szenario-Enumeration über offene Spiele
 src/fifa/schedule.ts    Round-Robin-Spielplan je Gruppe
 src/fifa/bracket.ts     R32-Auflösung + Turnierbaum + Gegner-Pfad
 src/r32Bracket.ts       Offizielle FIFA-Tabelle (Annex C, 495 Konstellationen)
-src/data/seed.ts        Platzhalter-Teams + Spielplan
+src/data/wc2026.json    Echte Auslosung + aktueller Spielstand (Wikipedia)
+src/data/seed.ts        Baut Teams/Spiele aus wc2026.json
 src/store.ts            State + localStorage-Persistenz
 src/App.tsx             UI
 ```

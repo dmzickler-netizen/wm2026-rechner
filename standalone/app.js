@@ -5,7 +5,6 @@
 
   // ---------- Konstanten / Spielplan ----------
   var GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L']
-  var PAIRS = [[0,1],[2,3],[0,2],[3,1],[3,0],[1,2]]
 
   // 16 R32-Spiele (73–88) aus r32Bracket.ts
   var R32_MATCHES = [
@@ -45,16 +44,18 @@
   function roundOf(n){ if(n<=88)return'R32'; if(n<=96)return'R16'; if(n<=100)return'QF'; if(n<=102)return'SF'; return'F' }
 
   // ---------- State ----------
-  var KEY = 'wm2026-standalone-v1'
+  var KEY = 'wm2026-standalone-v2'
   var state = load()
   var ui = { group:'A', myTeam:'' }
 
+  // Echte WM-2026-Auslosung + aktueller Spielstand (aus WC2026, vom Build injiziert).
   function seed(){
     var teams=[], matches=[]
     GROUPS.forEach(function(g){
-      for(var i=1;i<=4;i++) teams.push({id:g+i,name:g+i,group:g,fairPlay:0})
-      var ids=[g+1,g+2,g+3,g+4]
-      PAIRS.forEach(function(p,k){ matches.push({id:g+(k+1),group:g,home:ids[p[0]],away:ids[p[1]],hg:null,ag:null}) })
+      var data=WC2026.groups[g]
+      var idByName={}
+      data.teams.forEach(function(name,i){ teams.push({id:g+(i+1),name:name,group:g,fairPlay:0}); idByName[name]=g+(i+1) })
+      data.matches.forEach(function(m,i){ matches.push({id:g+(i+1),group:g,home:idByName[m[0]],away:idByName[m[1]],hg:m[2],ag:m[3]}) })
     })
     return {teams:teams,matches:matches}
   }
