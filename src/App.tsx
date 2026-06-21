@@ -103,6 +103,13 @@ export default function App() {
         />
       )}
 
+      <OpponentsPanel
+        standings={standings}
+        thirdRanking={thirdRanking}
+        myTeam={myTeam}
+        nameOf={nameOf}
+      />
+
       <nav className="tabs">
         {GROUP_IDS.map((g) => (
           <button
@@ -128,13 +135,6 @@ export default function App() {
       />
 
       <ThirdPlacePanel ranking={thirdRanking} nameOf={nameOf} />
-
-      <OpponentsPanel
-        standings={standings}
-        thirdRanking={thirdRanking}
-        myTeam={myTeam}
-        nameOf={nameOf}
-      />
     </div>
   )
 }

@@ -23,11 +23,11 @@ ${css}
 <div class="app">
   <header id="hdr"></header>
   <div id="myteam"></div>
+  <section id="opponents"></section>
   <nav class="tabs" id="tabs"></nav>
   <section id="groupInputs"></section>
   <section id="standings"></section>
   <section id="thirds"></section>
-  <section id="opponents"></section>
 </div>
 <script>
 var R32_DATA = ${r32};
