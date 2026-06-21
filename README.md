@@ -23,13 +23,31 @@ die Rangfolge.
 ## Schnellstart ohne Installation (empfohlen)
 
 Doppelklick auf **`vorschau.html`** – öffnet die komplette App im Browser,
-**ohne npm/Node/Server**, läuft offline. Enthält dieselbe Logik und dieselben
-FIFA-Daten wie die Vite-Version.
+**ohne npm/Node/Server**.
 
-> `vorschau.html` wird aus `src/styles.css`, `src/r32-combinations.json` und
-> `standalone/app.js` zusammengebaut. Bei Änderungen an diesen Dateien neu
-> erzeugen (siehe `standalone/app.js`-Kopf bzw. den Build-Einzeiler in der
-> Git-History).
+### Live-Ergebnisse
+
+Die App holt beim Öffnen und danach alle 45 s die aktuellen WM-Ergebnisse von
+**TheSportsDB** (kostenlos, CORS offen – funktioniert auch aus `file://`) und
+trägt sie automatisch ein. Status oben in der Leiste („🔴 Live · aktualisiert …").
+
+- **Kein Internet / Quelle weg:** es wird der zuletzt gespeicherte Stand gezeigt
+  (Hinweis „⚠ keine Verbindung").
+- **Live aus-Haken:** stoppt das automatische Aktualisieren.
+- **Manuell überschreiben:** sobald du ein Ergebnis selbst eintippst, lässt Live
+  dieses Spiel in Ruhe (für Was-wäre-wenn-Szenarien). „Auf echten Stand
+  zurücksetzen" hebt das wieder auf.
+- Hinweis: Der kostenlose Zugang liefert beendete Spiele (near-live), keinen
+  Sekunden-Ticker. Für echten In-Game-Live bräuchte es einen Premium-API-Key.
+
+### Neu bauen nach Änderungen
+
+`vorschau.html` wird aus `src/styles.css`, `src/r32-combinations.json`,
+`src/data/wc2026.json` und `standalone/app.js` erzeugt:
+
+```bash
+node scripts/build-standalone.cjs
+```
 
 ## Setup (Vite-Variante, für Weiterentwicklung)
 

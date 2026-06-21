@@ -8,6 +8,22 @@
   var FLAGS = (typeof WC2026 !== 'undefined' && WC2026.flags) || {}
   function flag(name){ return FLAGS[name] ? FLAGS[name] + ' ' : '' }
 
+  // ---------- Live-Daten (TheSportsDB, kostenlos, CORS offen) ----------
+  var API_BASE = 'https://www.thesportsdb.com/api/v1/json/3/'
+  var WC_LEAGUE = (WC2026 && WC2026.apiLeagueId) || '4429'
+  var ALIASES = (WC2026 && WC2026.aliases) || {}
+  function norm(s){ return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'') }
+  // Normalisierter Team-Name -> interne Team-ID (group+pos), unabhängig von editierten Namen.
+  var ALIAS_TO_ID = {}
+  GROUPS.forEach(function(g){
+    var data = WC2026.groups[g]
+    data.teams.forEach(function(nm,i){
+      var id = g+(i+1)
+      ALIAS_TO_ID[norm(nm)] = id
+      ;(ALIASES[nm]||[]).forEach(function(a){ ALIAS_TO_ID[norm(a)] = id })
+    })
+  })
+
   // 16 R32-Spiele (73–88) aus r32Bracket.ts
   var R32_MATCHES = [
     {n:73,h:{t:'r',g:'A'},a:{t:'r',g:'B'}},
@@ -48,7 +64,7 @@
   // ---------- State ----------
   var KEY = 'wm2026-standalone-v2'
   var state = load()
-  var ui = { group:'A', myTeam:'' }
+  var ui = { group:'A', myTeam:'', live:true, lastUpdate:'', liveError:false }
 
   // Echte WM-2026-Auslosung + aktueller Spielstand (aus WC2026, vom Build injiziert).
   function seed(){
@@ -59,9 +75,9 @@
       data.teams.forEach(function(name,i){ teams.push({id:g+(i+1),name:name,group:g,fairPlay:0}); idByName[name]=g+(i+1) })
       data.matches.forEach(function(m,i){ matches.push({id:g+(i+1),group:g,home:idByName[m[0]],away:idByName[m[1]],hg:m[2],ag:m[3]}) })
     })
-    return {teams:teams,matches:matches}
+    return {teams:teams,matches:matches,manual:{}}
   }
-  function load(){ try{var r=localStorage.getItem(KEY); if(r)return JSON.parse(r)}catch(e){} return seed() }
+  function load(){ try{var r=localStorage.getItem(KEY); if(r){var s=JSON.parse(r); if(!s.manual)s.manual={}; return s}}catch(e){} return seed() }
   function save(){ try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){} }
 
   function teamsOfGroup(g){ return state.teams.filter(function(t){return t.group===g}) }
@@ -259,6 +275,7 @@
         var m=state.matches.find(function(x){return x.id===id})
         var v=inp.value===''?null:Number(inp.value)
         if(side==='h')m.hg=v; else m.ag=v
+        state.manual[m.id]=true // manuell -> Live überschreibt nicht mehr
         save(); renderDerived()
       })
     })
@@ -385,13 +402,78 @@
     el('opponents').innerHTML=h
   }
 
+  // ---------- Live-Abruf ----------
+  function findMatch(g, idA, idB){
+    return state.matches.find(function(m){
+      return m.group===g && ((m.home===idA&&m.away===idB)||(m.home===idB&&m.away===idA))
+    })
+  }
+  function nowStr(){ var d=new Date(); function p(n){return(n<10?'0':'')+n} return p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds()) }
+
+  // Setzt die Score-Inputs der aktuellen Gruppe auf den State-Wert (ohne Inputs neu zu bauen).
+  function updateScoreInputs(){
+    el('groupInputs').querySelectorAll('[data-score]').forEach(function(inp){
+      if(inp===document.activeElement) return // nicht überschreiben, während getippt wird
+      var m=state.matches.find(function(x){return x.id===inp.getAttribute('data-score')})
+      if(!m)return
+      var v=inp.getAttribute('data-side')==='h'?m.hg:m.ag
+      inp.value=(v==null?'':v)
+    })
+  }
+  function renderLiveStatus(){
+    var s=el('liveStatus'); if(!s)return
+    if(!ui.live){ s.textContent='Live aus'; return }
+    var t=ui.lastUpdate?('aktualisiert '+ui.lastUpdate):'lade…'
+    s.textContent=(ui.liveError?'⚠ keine Verbindung – gespeicherter Stand · ':'🔴 Live · ')+t
+  }
+
+  // Holt die letzten beendeten WM-Spiele und überträgt Ergebnisse ins Modell.
+  function applyLive(){
+    if(!ui.live) return Promise.resolve(false)
+    return fetch(API_BASE+'eventspast.php?id='+WC_LEAGUE)
+      .then(function(r){ return r.json() })
+      .then(function(d){
+        var ev=(d&&d.events)||[]; var changed=false
+        ev.forEach(function(e){
+          if(String(e.idLeague)!==String(WC_LEAGUE)) return
+          if(e.intHomeScore==null||e.intAwayScore==null||e.intHomeScore===''||e.intAwayScore==='') return
+          var hid=ALIAS_TO_ID[norm(e.strHomeTeam)], aid=ALIAS_TO_ID[norm(e.strAwayTeam)]
+          if(!hid||!aid) return
+          if(hid.charAt(0)!==aid.charAt(0)) return // unterschiedliche Gruppen -> K.o.-Spiel, ignorieren
+          var g=hid.charAt(0)
+          var m=findMatch(g,hid,aid); if(!m) return
+          if(state.manual[m.id]) return // manuelle Eingabe hat Vorrang
+          var hg,ag
+          if(m.home===hid){ hg=+e.intHomeScore; ag=+e.intAwayScore } else { hg=+e.intAwayScore; ag=+e.intHomeScore }
+          if(m.hg!==hg||m.ag!==ag){ m.hg=hg; m.ag=ag; changed=true }
+        })
+        ui.liveError=false; ui.lastUpdate=nowStr()
+        if(changed){ save(); updateScoreInputs(); renderDerived() }
+        renderLiveStatus()
+        return changed
+      })
+      .catch(function(){ ui.liveError=true; renderLiveStatus(); return false })
+  }
+
   // ---------- Init ----------
   function init(){
     renderMyTeamSelect()
     el('myTeam').addEventListener('change',function(){ ui.myTeam=this.value; renderDerived(); renderStandings(allStandings()) })
-    el('btnClear').addEventListener('click',function(){ state.matches.forEach(function(m){m.hg=null;m.ag=null}); save(); renderGroupInputs(); renderDerived() })
-    el('btnReset').addEventListener('click',function(){ state=seed(); save(); ui.myTeam=''; renderMyTeamSelect(); renderGroupInputs(); renderDerived() })
-    renderTabs(); renderGroupInputs(); renderDerived()
+    el('btnClear').addEventListener('click',function(){
+      state.matches.forEach(function(m){ m.hg=null; m.ag=null; state.manual[m.id]=true })
+      save(); renderGroupInputs(); renderDerived()
+    })
+    el('btnReset').addEventListener('click',function(){
+      state=seed(); save(); ui.myTeam=''; renderMyTeamSelect(); renderGroupInputs(); renderDerived(); applyLive()
+    })
+    var tg=el('liveToggle')
+    if(tg){ tg.checked=ui.live; tg.addEventListener('change',function(){ ui.live=tg.checked; renderLiveStatus(); if(ui.live)applyLive() }) }
+    var rf=el('btnRefresh'); if(rf)rf.addEventListener('click',function(){ applyLive() })
+
+    renderTabs(); renderGroupInputs(); renderDerived(); renderLiveStatus()
+    // Live: sofort + alle 45s
+    applyLive()
+    setInterval(applyLive, 45000)
   }
   init()
 })()
