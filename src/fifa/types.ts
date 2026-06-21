@@ -14,6 +14,8 @@ export interface Team {
   id: TeamId
   name: string
   group: GroupId
+  /** Emoji-Flagge (optional, rein für die Anzeige). */
+  flag?: string
   /**
    * Fair-Play-Punkte (negativ) über alle Gruppenspiele.
    * FIFA-Formel je Spieler:

@@ -22,7 +22,11 @@ export default function App() {
     () => Object.fromEntries(t.teams.map((x) => [x.id, x] as const)),
     [t.teams],
   )
-  const nameOf = (id: string) => teamsById[id]?.name || id
+  const nameOf = (id: string) => {
+    const tm = teamsById[id]
+    if (!tm) return id
+    return (tm.flag ? tm.flag + ' ' : '') + tm.name
+  }
 
   // Tabellen aller Gruppen.
   const standings = useMemo(() => {
@@ -69,6 +73,7 @@ export default function App() {
                     .filter((x) => x.group === g)
                     .map((x) => (
                       <option key={x.id} value={x.id}>
+                        {x.flag ? x.flag + ' ' : ''}
                         {x.name}
                       </option>
                     ))}
@@ -315,6 +320,7 @@ function MyTeamPanel(props: {
   return (
     <section className={`myteam-panel ${verdict.cls}`}>
       <h2>
+        {team.flag ? team.flag + ' ' : ''}
         {team.name} <span className="grp">(Gruppe {team.group})</span>
       </h2>
       <div className="verdict">{verdict.text}</div>

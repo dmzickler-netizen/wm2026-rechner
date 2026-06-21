@@ -5,6 +5,8 @@
 
   // ---------- Konstanten / Spielplan ----------
   var GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L']
+  var FLAGS = (typeof WC2026 !== 'undefined' && WC2026.flags) || {}
+  function flag(name){ return FLAGS[name] ? FLAGS[name] + ' ' : '' }
 
   // 16 R32-Spiele (73–88) aus r32Bracket.ts
   var R32_MATCHES = [
@@ -224,7 +226,7 @@
     var h='<option value="">– wählen –</option>'
     GROUPS.forEach(function(g){
       h+='<optgroup label="Gruppe '+g+'">'
-      teamsOfGroup(g).forEach(function(t){ h+='<option value="'+t.id+'">'+esc(t.name)+'</option>' })
+      teamsOfGroup(g).forEach(function(t){ h+='<option value="'+t.id+'">'+flag(t.name)+esc(t.name)+'</option>' })
       h+='</optgroup>'
     })
     sel.innerHTML=h; sel.value=cur
@@ -235,11 +237,11 @@
     var h='<h2>Ergebnisse – Gruppe '+g+'</h2><div class="matches">'
     matches.forEach(function(m){
       h+='<div class="match">'
-        +'<span class="tn r">'+esc(nameOf(m.home))+'</span>'
+        +'<span class="tn r">'+flag(nameOf(m.home))+esc(nameOf(m.home))+'</span>'
         +'<input type="number" min="0" data-score="'+m.id+'" data-side="h" value="'+(m.hg==null?'':m.hg)+'">'
         +'<span class="colon">:</span>'
         +'<input type="number" min="0" data-score="'+m.id+'" data-side="a" value="'+(m.ag==null?'':m.ag)+'">'
-        +'<span class="tn">'+esc(nameOf(m.away))+'</span>'
+        +'<span class="tn">'+flag(nameOf(m.away))+esc(nameOf(m.away))+'</span>'
         +'</div>'
     })
     h+='</div><p class="hint">Leeres Feld = Spiel offen.</p>'
@@ -283,7 +285,7 @@
     rows.forEach(function(row,i){
       var m=matches[i]; if(!m)return
       var spans=row.querySelectorAll('.tn')
-      spans[0].textContent=nameOf(m.home); spans[1].textContent=nameOf(m.away)
+      spans[0].textContent=flag(nameOf(m.home))+nameOf(m.home); spans[1].textContent=flag(nameOf(m.away))+nameOf(m.away)
     })
     renderMyTeamSelect()
   }
@@ -304,7 +306,7 @@
     var h='<h2>Gruppe '+g+' – Tabelle</h2><table class="standings"><thead><tr>'
       +'<th>#</th><th class="l">Team</th><th>Sp</th><th>S</th><th>U</th><th>N</th><th>Tore</th><th>TD</th><th>Pkt</th></tr></thead><tbody>'
     rows.forEach(function(r){
-      h+='<tr class="'+rowClass(r.rank,r.team)+'"><td>'+r.rank+(r.lot?' 🎲':'')+'</td><td class="l">'+esc(nameOf(r.team))+'</td>'
+      h+='<tr class="'+rowClass(r.rank,r.team)+'"><td>'+r.rank+(r.lot?' 🎲':'')+'</td><td class="l">'+flag(nameOf(r.team))+esc(nameOf(r.team))+'</td>'
         +'<td>'+r.played+'</td><td>'+r.won+'</td><td>'+r.drawn+'</td><td>'+r.lost+'</td>'
         +'<td>'+r.gf+':'+r.ga+'</td><td>'+(r.gd>0?'+'+r.gd:r.gd)+'</td><td><b>'+r.points+'</b></td></tr>'
     })
@@ -317,7 +319,7 @@
     var h='<h2>Rangliste der Gruppendritten (8 von 12 weiter)</h2><table class="standings"><thead><tr>'
       +'<th>#</th><th class="l">Team</th><th>Gr.</th><th>Pkt</th><th>TD</th><th>Tore</th><th>FP</th><th></th></tr></thead><tbody>'
     thirds.forEach(function(e){
-      h+='<tr class="'+(e.qualifies?'adv':'out')+'"><td>'+e.rank+(e.lot?' 🎲':'')+'</td><td class="l">'+esc(nameOf(e.team))+'</td>'
+      h+='<tr class="'+(e.qualifies?'adv':'out')+'"><td>'+e.rank+(e.lot?' 🎲':'')+'</td><td class="l">'+flag(nameOf(e.team))+esc(nameOf(e.team))+'</td>'
         +'<td>'+e.group+'</td><td><b>'+e.points+'</b></td><td>'+(e.gd>0?'+'+e.gd:e.gd)+'</td><td>'+e.gf+'</td><td>'+e.fairPlay+'</td><td>'+(e.qualifies?'✅':'❌')+'</td></tr>'
     })
     h+='</tbody></table>'
@@ -340,7 +342,7 @@
     else if(an.best<=2)v={c:'maybe',t:'Weiterkommen möglich (Plätze '+reach.join('/')+')'}
     else v={c:'maybe',t:'Nur als Gruppendritter möglich (Plätze '+reach.join('/')+')'}
     var te=thirds.find(function(e){return e.team===team.id})
-    var h='<section class="myteam-panel '+v.c+'"><h2>'+esc(team.name)+' <span class="grp">(Gruppe '+team.group+')</span></h2>'
+    var h='<section class="myteam-panel '+v.c+'"><h2>'+flag(team.name)+esc(team.name)+' <span class="grp">(Gruppe '+team.group+')</span></h2>'
       +'<div class="verdict">'+v.t+'</div><ul class="facts">'
       +'<li>Aktueller Platz: <b>'+(pos?pos.rank:'–')+'</b> mit '+(pos?pos.points:0)+' Pkt (TD '+(pos&&pos.gd>0?'+':'')+(pos?pos.gd:0)+')</li>'
       +'<li>Erreichbare Endplätze: <b>'+(reach.join(', ')||'–')+'</b></li>'
@@ -362,22 +364,22 @@
     var myName=ui.myTeam?nameOf(ui.myTeam):''
     if(ui.myTeam){
       var path=opponentPath(myName,resolved)
-      h+='<div class="mypath"><h3>Weg von '+esc(myName)+'</h3>'
+      h+='<div class="mypath"><h3>Weg von '+flag(myName)+esc(myName)+'</h3>'
       if(path){
-        h+='<ol class="path"><li><span class="r">Sechzehntelfinale (R32)</span><span class="opp">vs '+esc(path.r32Opponent)+'</span></li>'
+        h+='<ol class="path"><li><span class="r">Sechzehntelfinale (R32)</span><span class="opp">vs '+flag(path.r32Opponent)+esc(path.r32Opponent)+'</span></li>'
         path.rounds.forEach(function(r){
-          h+='<li><span class="r">'+ROUND_LABEL[r.round]+'</span><span class="opp">'+(r.opponents.length===1?'vs ':'mögl. Gegner: ')+r.opponents.map(esc).join(', ')+'</span></li>'
+          h+='<li><span class="r">'+ROUND_LABEL[r.round]+'</span><span class="opp">'+(r.opponents.length===1?'vs ':'mögl. Gegner: ')+r.opponents.map(function(o){return flag(o)+esc(o)}).join(', ')+'</span></li>'
         })
         h+='</ol>'
       } else {
-        h+='<p class="notice">'+esc(myName)+' ist nach aktueller Tabelle <b>nicht im Achtelfinale</b>.</p>'
+        h+='<p class="notice">'+flag(myName)+esc(myName)+' ist nach aktueller Tabelle <b>nicht im Achtelfinale</b>.</p>'
       }
       h+='</div>'
     }
     h+='<h3>Komplettes Sechzehntelfinale (R32)</h3><table class="bracket"><tbody>'
     resolved.forEach(function(m){
       var mine=(m.home===myName||m.away===myName)?' class="mine"':''
-      h+='<tr'+mine+'><td class="mno">#'+m.n+'</td><td class="r">'+esc(m.home)+'</td><td class="vs">–</td><td class="l">'+esc(m.away)+'</td></tr>'
+      h+='<tr'+mine+'><td class="mno">#'+m.n+'</td><td class="r">'+flag(m.home)+esc(m.home)+'</td><td class="vs">–</td><td class="l">'+flag(m.away)+esc(m.away)+'</td></tr>'
     })
     h+='</tbody></table>'
     el('opponents').innerHTML=h

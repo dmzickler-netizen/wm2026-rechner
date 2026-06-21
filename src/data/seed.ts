@@ -9,14 +9,16 @@ import wc2026 from './wc2026.json'
  */
 
 type GroupData = { teams: string[]; matches: [string, string, number | null, number | null][] }
-const GROUPS = (wc2026 as { groups: Record<string, GroupData> }).groups
+const DATA = wc2026 as { groups: Record<string, GroupData>; flags: Record<string, string> }
+const GROUPS = DATA.groups
+const FLAGS = DATA.flags
 
 export function buildSeedTeams(): Team[] {
   const teams: Team[] = []
   for (const g of GROUP_IDS) {
     const data = GROUPS[g]
     data.teams.forEach((name, i) => {
-      teams.push({ id: `${g}${i + 1}`, name, group: g as GroupId, fairPlay: 0 })
+      teams.push({ id: `${g}${i + 1}`, name, group: g as GroupId, fairPlay: 0, flag: FLAGS[name] })
     })
   }
   return teams
