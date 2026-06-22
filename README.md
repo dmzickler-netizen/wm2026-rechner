@@ -28,10 +28,13 @@ Doppelklick auf **`vorschau.html`** – öffnet die komplette App im Browser,
 ### Live-Ergebnisse
 
 Die App holt beim Öffnen und danach alle 45 s die aktuellen WM-Ergebnisse von
-**OpenLigaDB** (kostenlos, kein API-Key, CORS offen – funktioniert auch aus
-`file://`) und trägt sie automatisch ein. Eine Abfrage liefert alle Spiele
-(Liga `wm2026/2026`), Zuordnung erfolgt über die Teamnamen. Status oben in der
-Leiste („🔴 Live · aktualisiert …").
+mehreren kostenlosen Quellen (kein API-Key) und trägt sie automatisch ein:
+- **ESPN** (Primär, Echtzeit – erfasst auch US-Nachtspiele sofort)
+- **OpenLigaDB** + **TheSportsDB** (Backup – falls ESPN mal nicht erreichbar ist)
+
+Die Ergebnisse aller Quellen werden zusammengeführt (ESPN gewinnt bei
+Konflikten, da am aktuellsten), Zuordnung über die Teamnamen. Status oben in
+der Leiste („🔴 Live · aktualisiert …").
 
 - **Kein Internet / Quelle weg:** es wird der zuletzt gespeicherte Stand gezeigt
   (Hinweis „⚠ keine Verbindung").

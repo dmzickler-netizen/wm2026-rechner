@@ -505,7 +505,36 @@
     var rs=m.matchResults||[]; if(!rs.length) return null
     return rs.filter(function(r){return r.resultTypeID===2})[0] || rs[rs.length-1]
   }
-  // Primärquelle: OpenLigaDB (kostenlos, kein Key, CORS offen). Eine Abfrage = ALLE Spiele.
+  // Primärquelle: ESPN (Echtzeit, kostenlos, kein Key). Pro Tag eine Abfrage; deckt US-Nachtspiele sofort ab.
+  var ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates='
+  function pad2(n){ return (n<10?'0':'')+n }
+  function compact(d){ return ''+d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate()) }
+  function espnRange(a,b){ var out=[],d=new Date(a),e=new Date(b); while(d<=e){ out.push(compact(d)); d.setDate(d.getDate()+1) } return out }
+  var ESPN_DATES = espnRange('2026-06-11T00:00:00','2026-06-27T00:00:00')
+  function recentEspn(){ var t=new Date(),arr=[]; for(var i=2;i>=0;i--){ var x=new Date(t); x.setDate(x.getDate()-i); arr.push(compact(x)) } return arr }
+  function fetchESPN(dates){
+    return Promise.all(dates.map(function(d){
+      return fetch(ESPN_BASE+d).then(function(r){ return r.json() }).then(function(j){ return (j&&j.events)||[] }).catch(function(){ return null })
+    })).then(function(lists){
+      var ok=lists.some(function(x){ return x!==null }), evs=[]
+      lists.forEach(function(list){ if(!list) return; list.forEach(function(ev){
+        var comp=ev.competitions&&ev.competitions[0]; if(!comp) return
+        var st=(ev.status||comp.status), done=st&&st.type&&st.type.completed
+        if(!done) return
+        var cs=comp.competitors||[]; if(cs.length!==2) return
+        var home=cs.filter(function(c){return c.homeAway==='home'})[0]||cs[0]
+        var away=cs.filter(function(c){return c.homeAway==='away'})[0]||cs[1]
+        if(home.score==null||away.score==null) return
+        evs.push({ idLeague:WC_LEAGUE,
+          strHomeTeam:(home.team&&(home.team.displayName||home.team.name||home.team.shortDisplayName))||'',
+          strAwayTeam:(away.team&&(away.team.displayName||away.team.name||away.team.shortDisplayName))||'',
+          intHomeScore:+home.score, intAwayScore:+away.score })
+      })})
+      return { ok:ok, evs:evs }
+    })
+  }
+
+  // Backup-Quelle: OpenLigaDB (vollständig, aber teils verzögert). Eine Abfrage = ALLE Spiele.
   var OLDB_URL = 'https://api.openligadb.de/getmatchdata/wm2026/2026'
   function fetchOLDB(){
     return fetch(OLDB_URL).then(function(r){ return r.json() }).then(function(data){
@@ -531,12 +560,15 @@
           intHomeScore:e.intHomeScore, intAwayScore:e.intAwayScore } })
       }).catch(function(){ return null })
   }
-  function applyLive(){
+  // full=true: ganzes Turnierfenster (Start/Manuell). full=false: nur letzte Tage (Intervall).
+  function applyLive(full){
     if(!ui.live) return Promise.resolve(false)
-    return Promise.all([fetchOLDB(), fetchTSDB()]).then(function(res){
-      var a=res[0], b=res[1]
-      var ok = a!==null || b!==null
-      var all = (a||[]).concat(b||[])
+    var espnDates = full ? ESPN_DATES : recentEspn()
+    return Promise.all([ fetchESPN(espnDates), fetchOLDB(), fetchTSDB() ]).then(function(res){
+      var espn=res[0], oldb=res[1], tsdb=res[2]
+      var ok = (espn && espn.ok) || oldb!==null || tsdb!==null
+      // Reihenfolge: Backups zuerst, ESPN zuletzt -> ESPN (am aktuellsten) gewinnt bei Konflikten.
+      var all = (oldb||[]).concat(tsdb||[]).concat((espn&&espn.evs)||[])
       var changed = applyEvents(all)
       if(ok){ ui.liveError=false; ui.lastUpdate=nowStr() } else { ui.liveError=true }
       if(changed){ save(); updateScoreInputs(); renderDerived() }
