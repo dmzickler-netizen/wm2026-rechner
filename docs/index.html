@@ -5932,26 +5932,44 @@ var WC2026 = {
     var rs=m.matchResults||[]; if(!rs.length) return null
     return rs.filter(function(r){return r.resultTypeID===2})[0] || rs[rs.length-1]
   }
-  // Quelle: OpenLigaDB (kostenlos, kein Key, CORS offen). Eine Abfrage = ALLE Spiele.
+  // Primärquelle: OpenLigaDB (kostenlos, kein Key, CORS offen). Eine Abfrage = ALLE Spiele.
   var OLDB_URL = 'https://api.openligadb.de/getmatchdata/wm2026/2026'
-  function applyLive(){
-    if(!ui.live) return Promise.resolve(false)
+  function fetchOLDB(){
     return fetch(OLDB_URL).then(function(r){ return r.json() }).then(function(data){
-      if(!Array.isArray(data)) throw new Error('bad data')
+      if(!Array.isArray(data)) return null
       var evs=[]
       data.forEach(function(m){
-        if(!m.matchIsFinished) return
         var fin=finalResult(m); if(!fin||fin.pointsTeam1==null||fin.pointsTeam2==null) return
+        // Übernehmen, sobald ein ENDERGEBNIS vorliegt (auch wenn das "beendet"-Flag noch hinterherhinkt).
+        if(!(m.matchIsFinished || fin.resultTypeID===2)) return
         evs.push({ idLeague:WC_LEAGUE,
           strHomeTeam:(m.team1&&m.team1.teamName)||'', strAwayTeam:(m.team2&&m.team2.teamName)||'',
           intHomeScore:fin.pointsTeam1, intAwayScore:fin.pointsTeam2 })
       })
-      var changed=applyEvents(evs)
-      ui.liveError=false; ui.lastUpdate=nowStr()
+      return evs
+    }).catch(function(){ return null })
+  }
+  // Zweitquelle (Fallback): TheSportsDB – letzte beendete Spiele. Was eine Quelle früher hat, füllt die App.
+  function fetchTSDB(){
+    return fetch(API_BASE+'eventspast.php?id='+WC_LEAGUE).then(function(r){ return r.json() })
+      .then(function(d){
+        return ((d&&d.events)||[]).map(function(e){ return {
+          idLeague:e.idLeague, strHomeTeam:e.strHomeTeam, strAwayTeam:e.strAwayTeam,
+          intHomeScore:e.intHomeScore, intAwayScore:e.intAwayScore } })
+      }).catch(function(){ return null })
+  }
+  function applyLive(){
+    if(!ui.live) return Promise.resolve(false)
+    return Promise.all([fetchOLDB(), fetchTSDB()]).then(function(res){
+      var a=res[0], b=res[1]
+      var ok = a!==null || b!==null
+      var all = (a||[]).concat(b||[])
+      var changed = applyEvents(all)
+      if(ok){ ui.liveError=false; ui.lastUpdate=nowStr() } else { ui.liveError=true }
       if(changed){ save(); updateScoreInputs(); renderDerived() }
       renderLiveStatus()
       return changed
-    }).catch(function(){ ui.liveError=true; renderLiveStatus(); return false })
+    })
   }
 
   // ---------- Header / Init ----------
