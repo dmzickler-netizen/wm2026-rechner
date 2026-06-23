@@ -5449,7 +5449,7 @@ var WC2026 = {
       col_team: 'Team', col_mp: 'Sp', col_w: 'S', col_d: 'U', col_l: 'N', col_goals: 'Tore', col_gd: 'TD', col_pts: 'Pkt', col_grp: 'Gr.', col_fp: 'FP',
       legAdv: '1./2. → weiter', legMaybe: '3. → evtl.', legOut: 'raus', legLot: '🎲 = Los',
       thirdsHeading: 'Rangliste der Gruppendritten (8 von 12 weiter)',
-      verdictSafe: 'Sicher weiter (mind. Platz 2)', verdictOut: 'Ausgeschieden', verdictNoData: 'Keine Daten',
+      verdictWinner: 'Sicher Gruppensieger (Platz 1)', verdictSafe: 'Sicher weiter (mind. Platz 2)', verdictOut: 'Ausgeschieden', verdictNoData: 'Keine Daten',
       verdictMaybeP: 'Weiterkommen möglich (Plätze {x})', verdictThirdOnlyP: 'Nur als Gruppendritter möglich (Plätze {x})',
       lblPosition: 'Platz', factReachable: 'Erreichbare Endplätze', factScenarios: 'Durchgerechnete Szenarien',
       approxNote: '(genähert: nur S/U/N)', asThird: 'Als Gruppendritter aktuell Rang',
@@ -5474,7 +5474,7 @@ var WC2026 = {
       col_team: 'Team', col_mp: 'MP', col_w: 'W', col_d: 'D', col_l: 'L', col_goals: 'Goals', col_gd: 'GD', col_pts: 'Pts', col_grp: 'Grp', col_fp: 'FP',
       legAdv: '1st/2nd → advance', legMaybe: '3rd → maybe', legOut: 'out', legLot: '🎲 = drawing of lots',
       thirdsHeading: 'Ranking of third-placed teams (8 of 12 advance)',
-      verdictSafe: 'Through for sure (at least 2nd)', verdictOut: 'Eliminated', verdictNoData: 'No data',
+      verdictWinner: 'Group winner for sure (1st)', verdictSafe: 'Through for sure (at least 2nd)', verdictOut: 'Eliminated', verdictNoData: 'No data',
       verdictMaybeP: 'Advancing possible (positions {x})', verdictThirdOnlyP: 'Only as third place possible (positions {x})',
       lblPosition: 'Position', factReachable: 'Reachable final positions', factScenarios: 'Scenarios computed',
       approxNote: '(approx.: only W/D/L)', asThird: 'As third currently ranked',
@@ -5499,7 +5499,7 @@ var WC2026 = {
       col_team: 'Equipo', col_mp: 'PJ', col_w: 'G', col_d: 'E', col_l: 'P', col_goals: 'Goles', col_gd: 'DG', col_pts: 'Pts', col_grp: 'Gr.', col_fp: 'JL',
       legAdv: '1.º/2.º → avanzan', legMaybe: '3.º → quizá', legOut: 'fuera', legLot: '🎲 = sorteo',
       thirdsHeading: 'Clasificación de terceros (8 de 12 avanzan)',
-      verdictSafe: 'Clasificado seguro (mín. 2.º)', verdictOut: 'Eliminado', verdictNoData: 'Sin datos',
+      verdictWinner: 'Primero de grupo asegurado (1.º)', verdictSafe: 'Clasificado seguro (mín. 2.º)', verdictOut: 'Eliminado', verdictNoData: 'Sin datos',
       verdictMaybeP: 'Avance posible (posiciones {x})', verdictThirdOnlyP: 'Solo como tercero posible (posiciones {x})',
       lblPosition: 'Posición', factReachable: 'Posiciones finales alcanzables', factScenarios: 'Escenarios calculados',
       approxNote: '(aprox.: solo G/E/P)', asThird: 'Como tercero, actualmente puesto',
@@ -5603,33 +5603,48 @@ var WC2026 = {
     ids.forEach(function(id){ t[id].gd=t[id].gf-t[id].ga })
     return t
   }
-  function cmpOverall(x,y){ return (y.points-x.points)||(y.gd-x.gd)||(y.gf-x.gf) }
-  function cmpFair(x,y){ return y.fairPlay-x.fairPlay }
-  function breakTie(block, matches, fp, lot){
-    var h2h=matches.filter(function(m){return block.indexOf(m.home)>=0&&block.indexOf(m.away)>=0})
-    var hs=computeStats(block,h2h,fp)
-    var sorted=block.slice().sort(function(p,q){return cmpOverall(hs[p],hs[q])||cmpFair(hs[p],hs[q])})
+  // FIFA-2026-Tiebreaker: Punkte -> DIREKTER VERGLEICH (Punkte/TD/Tore untereinander)
+  // -> dann erst Gesamt-TD -> Gesamt-Tore -> Fair-Play -> Los.
+  // Teams, die untereinander noch gleich sind, lösen die direkten Kriterien erneut auf.
+  function resolveByOverall(sub, st, lot){
+    var sorted=sub.slice().sort(function(p,q){ return (st[q].gd-st[p].gd)||(st[q].gf-st[p].gf)||(st[q].fairPlay-st[p].fairPlay) })
     var res=[],i=0
     while(i<sorted.length){
       var j=i+1
-      while(j<sorted.length&&cmpOverall(hs[sorted[i]],hs[sorted[j]])===0&&cmpFair(hs[sorted[i]],hs[sorted[j]])===0)j++
+      while(j<sorted.length && st[sorted[i]].gd===st[sorted[j]].gd && st[sorted[i]].gf===st[sorted[j]].gf && st[sorted[i]].fairPlay===st[sorted[j]].fairPlay) j++
+      var s2=sorted.slice(i,j)
+      if(s2.length===1) res.push(s2[0])
+      else { s2.forEach(function(id){lot[id]=true}); res.push.apply(res, s2.slice().sort()) } // Los
+      i=j
+    }
+    return res
+  }
+  // block = Teams gleich auf Punkte. Erst direkter Vergleich (rekursiv), dann Gesamt.
+  function resolveBlock(block, matches, fp, st, lot){
+    var h2h=matches.filter(function(m){return block.indexOf(m.home)>=0&&block.indexOf(m.away)>=0})
+    var hs=computeStats(block,h2h,fp)
+    var sorted=block.slice().sort(function(p,q){ return (hs[q].points-hs[p].points)||(hs[q].gd-hs[p].gd)||(hs[q].gf-hs[p].gf) })
+    var res=[],i=0
+    while(i<sorted.length){
+      var j=i+1
+      while(j<sorted.length && hs[sorted[i]].points===hs[sorted[j]].points && hs[sorted[i]].gd===hs[sorted[j]].gd && hs[sorted[i]].gf===hs[sorted[j]].gf) j++
       var sub=sorted.slice(i,j)
-      if(sub.length===1)res.push(sub[0])
-      else if(sub.length<block.length)res.push.apply(res,breakTie(sub,matches,fp,lot))
-      else{ sub.forEach(function(id){lot[id]=true}); res.push.apply(res,sub.slice().sort()) }
+      if(sub.length===1) res.push(sub[0])
+      else if(sub.length<block.length) res.push.apply(res, resolveBlock(sub,matches,fp,st,lot)) // Teilmenge getrennt -> direkten Vergleich erneut
+      else res.push.apply(res, resolveByOverall(sub, st, lot)) // nichts getrennt -> Gesamt-Kriterien
       i=j
     }
     return res
   }
   function rankGroup(ids, matches, fp){
     var st=computeStats(ids,matches,fp), lot={}
-    var sorted=ids.slice().sort(function(p,q){return cmpOverall(st[p],st[q])})
+    var sorted=ids.slice().sort(function(p,q){ return st[q].points-st[p].points }) // 1) nur nach Punkten
     var order=[],i=0
     while(i<sorted.length){
       var j=i+1
-      while(j<sorted.length&&cmpOverall(st[sorted[i]],st[sorted[j]])===0)j++
+      while(j<sorted.length && st[sorted[j]].points===st[sorted[i]].points) j++ // Block gleicher Punkte
       var b=sorted.slice(i,j)
-      if(b.length===1)order.push(b[0]); else order.push.apply(order,breakTie(b,matches,fp,lot))
+      if(b.length===1) order.push(b[0]); else order.push.apply(order, resolveBlock(b,matches,fp,st,lot))
       i=j
     }
     return order.map(function(id,k){ var s=st[id]; return {team:id,rank:k+1,played:s.played,won:s.won,drawn:s.drawn,lost:s.lost,gf:s.gf,ga:s.ga,gd:s.gd,points:s.points,fairPlay:s.fairPlay,lot:!!lot[id]} })
@@ -5843,6 +5858,7 @@ var WC2026 = {
     var pos=standings[team.group].find(function(r){return r.team===team.id})
     var reach=an.reach, v
     if(reach.length===0)v={c:'out',t:t('verdictNoData')}
+    else if(an.worst===1)v={c:'adv',t:t('verdictWinner')}
     else if(an.worst<=2)v={c:'adv',t:t('verdictSafe')}
     else if(an.best>=4)v={c:'out',t:t('verdictOut')}
     else if(an.best<=2)v={c:'maybe',t:t('verdictMaybeP').replace('{x}',reach.join('/'))}

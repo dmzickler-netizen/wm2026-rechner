@@ -304,6 +304,8 @@ function MyTeamPanel(props: {
   let verdict: { cls: string; text: string }
   if (reach.length === 0) {
     verdict = { cls: 'out', text: 'Keine Daten' }
+  } else if (analysis.worst === 1) {
+    verdict = { cls: 'adv', text: 'Sicher Gruppensieger (Platz 1)' }
   } else if (analysis.worst <= 2) {
     verdict = { cls: 'adv', text: 'Sicher weiter (mind. Platz 2)' }
   } else if (analysis.best >= 4) {

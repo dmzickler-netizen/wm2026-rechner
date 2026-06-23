@@ -44,12 +44,23 @@ export function computeStats(
   return table
 }
 
-/** Vergleich nach den Gesamtkriterien a) Punkte b) Tordifferenz c) Tore. */
+/** Vergleich Punkte → Tordifferenz → Tore (für den direkten Vergleich). */
 function compareOverall(x: TeamStats, y: TeamStats): number {
   if (y.points !== x.points) return y.points - x.points
   if (y.gd !== x.gd) return y.gd - x.gd
   if (y.gf !== x.gf) return y.gf - x.gf
   return 0
+}
+
+/** Nur Punkte (oberstes Kriterium). */
+function comparePoints(x: TeamStats, y: TeamStats): number {
+  return y.points - x.points
+}
+
+/** Gesamt-Tordifferenz → Gesamt-Tore (nach erschöpftem direkten Vergleich). */
+function compareGoalDiff(x: TeamStats, y: TeamStats): number {
+  if (y.gd !== x.gd) return y.gd - x.gd
+  return y.gf - x.gf
 }
 
 /** Vergleich nach Fair-Play (weniger negative Punkte = besser). */
@@ -58,21 +69,22 @@ function compareFairPlay(x: TeamStats, y: TeamStats): number {
 }
 
 /**
- * Rangordnung einer Gruppe nach offiziellem FIFA-Regelwerk:
+ * Rangordnung einer Gruppe nach FIFA-Regelwerk **2026** (geändert: direkter
+ * Vergleich VOR der Gesamt-Tordifferenz – wie bei der UEFA):
  *   a) Punkte (gesamt)
- *   b) Tordifferenz (gesamt)
- *   c) erzielte Tore (gesamt)
  *   — bei Gleichstand zwischen 2+ Teams, nur untereinander: —
- *   d) Punkte im direkten Vergleich
- *   e) Tordifferenz im direkten Vergleich
- *   f) erzielte Tore im direkten Vergleich
- *   g) Fair-Play-Wertung (gesamt)
+ *   b) Punkte im direkten Vergleich
+ *   c) Tordifferenz im direkten Vergleich
+ *   d) erzielte Tore im direkten Vergleich
+ *   — danach (falls weiter gleich): —
+ *   e) Tordifferenz (gesamt)
+ *   f) erzielte Tore (gesamt)
+ *   g) Fair-Play-Wertung
  *   h) Losentscheid
  *
- * Hinweis zur Rekursion: Die Kriterien d–f werden ausschließlich auf die
- * untereinander noch gleichen Teams angewandt. Trennt sich dort eine
- * Teilmenge ab, bleibt die kleinere gleiche Restmenge übrig und d–f werden
- * darauf erneut angewandt; erst danach g) und h).
+ * Rekursion: b–d gelten nur für die untereinander gleichen Teams. Trennt sich
+ * eine Teilmenge ab, werden b–d auf die kleinere Restmenge erneut angewandt;
+ * erst wenn sich gar nichts trennt, kommen e–h.
  */
 export function rankGroup(
   teamIds: TeamId[],
@@ -106,39 +118,30 @@ function orderTeams(
   fairPlayByTeam: Record<TeamId, number>,
   decidedByLot: Set<TeamId>,
 ): TeamId[] {
-  // 1. Nach Gesamtkriterien sortieren.
-  const sorted = [...ids].sort((p, q) => compareOverall(stats[p], stats[q]))
+  // 1. Nur nach Punkten sortieren.
+  const sorted = [...ids].sort((p, q) => comparePoints(stats[p], stats[q]))
 
-  // 2. Blöcke gleicher Teams (nach a–c) finden und intern per H2H auflösen.
+  // 2. Blöcke gleicher Punkte über den direkten Vergleich auflösen.
   const result: TeamId[] = []
   let i = 0
   while (i < sorted.length) {
     let j = i + 1
-    while (
-      j < sorted.length &&
-      compareOverall(stats[sorted[i]], stats[sorted[j]]) === 0
-    ) {
-      j++
-    }
+    while (j < sorted.length && stats[sorted[i]].points === stats[sorted[j]].points) j++
     const block = sorted.slice(i, j)
-    if (block.length === 1) {
-      result.push(block[0])
-    } else {
-      result.push(
-        ...breakTie(block, matches, fairPlayByTeam, decidedByLot),
-      )
-    }
+    if (block.length === 1) result.push(block[0])
+    else result.push(...breakTie(block, stats, matches, fairPlayByTeam, decidedByLot))
     i = j
   }
   return result
 }
 
 /**
- * Löst einen Block von Teams auf, die nach a–c gleich sind.
- * Wendet d–f (direkter Vergleich) an, danach g (Fair-Play), dann h (Los).
+ * Teams gleich auf Punkte: erst direkter Vergleich (b–d, rekursiv), dann
+ * Gesamt-Kriterien (e–f), Fair-Play (g), Los (h).
  */
 function breakTie(
   block: TeamId[],
+  stats: Record<TeamId, TeamStats>,
   matches: Match[],
   fairPlayByTeam: Record<TeamId, number>,
   decidedByLot: Set<TeamId>,
@@ -148,35 +151,56 @@ function breakTie(
     (m) => block.includes(m.home) && block.includes(m.away),
   )
   const h2hStats = computeStats(block, h2hMatches, fairPlayByTeam)
+  const sorted = [...block].sort((p, q) => compareOverall(h2hStats[p], h2hStats[q]))
 
-  const sorted = [...block].sort((p, q) => {
-    const c = compareOverall(h2hStats[p], h2hStats[q])
+  const result: TeamId[] = []
+  let i = 0
+  while (i < sorted.length) {
+    let j = i + 1
+    while (j < sorted.length && compareOverall(h2hStats[sorted[i]], h2hStats[sorted[j]]) === 0) j++
+    const sub = sorted.slice(i, j)
+    if (sub.length === 1) {
+      result.push(sub[0])
+    } else if (sub.length < block.length) {
+      // Teilmenge hat sich getrennt → direkten Vergleich auf sie erneut anwenden.
+      result.push(...breakTie(sub, stats, matches, fairPlayByTeam, decidedByLot))
+    } else {
+      // Direkter Vergleich trennt nicht → Gesamt-Kriterien, dann Los.
+      result.push(...byOverall(sub, stats, decidedByLot))
+    }
+    i = j
+  }
+  return result
+}
+
+/** Gesamt-Tordifferenz → Gesamt-Tore → Fair-Play → Los. */
+function byOverall(
+  sub: TeamId[],
+  stats: Record<TeamId, TeamStats>,
+  decidedByLot: Set<TeamId>,
+): TeamId[] {
+  const sorted = [...sub].sort((p, q) => {
+    const c = compareGoalDiff(stats[p], stats[q])
     if (c !== 0) return c
-    return compareFairPlay(h2hStats[p], h2hStats[q])
+    return compareFairPlay(stats[p], stats[q])
   })
-
-  // Erneut Blöcke bilden: Teams, die auch nach d–f + g noch gleich sind.
   const result: TeamId[] = []
   let i = 0
   while (i < sorted.length) {
     let j = i + 1
     while (
       j < sorted.length &&
-      compareOverall(h2hStats[sorted[i]], h2hStats[sorted[j]]) === 0 &&
-      compareFairPlay(h2hStats[sorted[i]], h2hStats[sorted[j]]) === 0
+      compareGoalDiff(stats[sorted[i]], stats[sorted[j]]) === 0 &&
+      compareFairPlay(stats[sorted[i]], stats[sorted[j]]) === 0
     ) {
       j++
     }
-    const sub = sorted.slice(i, j)
-    if (sub.length === 1) {
-      result.push(sub[0])
-    } else if (sub.length < block.length) {
-      // Echte Teilmenge hat sich nicht getrennt → d–f erneut auf sie anwenden.
-      result.push(...breakTie(sub, matches, fairPlayByTeam, decidedByLot))
+    const s2 = sorted.slice(i, j)
+    if (s2.length === 1) {
+      result.push(s2[0])
     } else {
-      // Nichts hat sich getrennt → Losentscheid (deterministisch, markiert).
-      for (const id of sub) decidedByLot.add(id)
-      result.push(...[...sub].sort((p, q) => p.localeCompare(q)))
+      for (const id of s2) decidedByLot.add(id)
+      result.push(...[...s2].sort((p, q) => p.localeCompare(q)))
     }
     i = j
   }
