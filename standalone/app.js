@@ -16,7 +16,7 @@
       refreshNow: 'Jetzt aktualisieren', clearResults: 'Ergebnisse leeren', resetLive: 'Auf echten Stand zurücksetzen',
       liveDisclaimer: '⏱ Ergebnisse werden automatisch geladen (alle ~60 s) und spiegeln beendete Spiele wider – kein offizieller Sekunden-Ticker, kurze Verzögerung möglich.',
       liveOff: 'Live aus', liveUpdated: 'aktualisiert', liveLoading: 'lädt…', liveNoConn: '⚠ keine Verbindung – gespeicherter Stand',
-      group: 'Gruppe', resultsHeading: 'Ergebnisse', openHint: 'Leeres Feld = Spiel offen.',
+      group: 'Gruppe', resultsHeading: 'Ergebnisse', openHint: 'Leeres Feld = Spiel offen.', matchday: 'Spieltag',
       manualHint: 'Tipp: Eigene/hypothetische Ergebnisse eintippen – diese werden von der Live-Aktualisierung nicht überschrieben.',
       teamsFairplay: 'Teams & Fair-Play', fairplay: 'Fair-Play:', tableWord: 'Tabelle',
       col_team: 'Team', col_mp: 'Sp', col_w: 'S', col_d: 'U', col_l: 'N', col_goals: 'Tore', col_gd: 'TD', col_pts: 'Pkt', col_grp: 'Gr.', col_fp: 'FP',
@@ -41,7 +41,7 @@
       refreshNow: 'Refresh now', clearResults: 'Clear results', resetLive: 'Reset to live data',
       liveDisclaimer: '⏱ Results load automatically (every ~60 s) and reflect finished matches – not an official live ticker, short delay possible.',
       liveOff: 'Live off', liveUpdated: 'updated', liveLoading: 'loading…', liveNoConn: '⚠ no connection – saved data',
-      group: 'Group', resultsHeading: 'Results', openHint: 'Empty field = match not played.',
+      group: 'Group', resultsHeading: 'Results', openHint: 'Empty field = match not played.', matchday: 'Matchday',
       manualHint: 'Tip: type your own/hypothetical results – live updates will not overwrite them.',
       teamsFairplay: 'Teams & fair play', fairplay: 'Fair play:', tableWord: 'Table',
       col_team: 'Team', col_mp: 'MP', col_w: 'W', col_d: 'D', col_l: 'L', col_goals: 'Goals', col_gd: 'GD', col_pts: 'Pts', col_grp: 'Grp', col_fp: 'FP',
@@ -66,7 +66,7 @@
       refreshNow: 'Actualizar ahora', clearResults: 'Borrar resultados', resetLive: 'Restablecer datos reales',
       liveDisclaimer: '⏱ Los resultados se cargan automáticamente (cada ~60 s) y reflejan partidos finalizados – no es un marcador oficial en vivo, puede haber un pequeño retraso.',
       liveOff: 'En vivo: apagado', liveUpdated: 'actualizado', liveLoading: 'cargando…', liveNoConn: '⚠ sin conexión – datos guardados',
-      group: 'Grupo', resultsHeading: 'Resultados', openHint: 'Campo vacío = partido pendiente.',
+      group: 'Grupo', resultsHeading: 'Resultados', openHint: 'Campo vacío = partido pendiente.', matchday: 'Jornada',
       manualHint: 'Consejo: escribe tus propios resultados/hipotéticos – la actualización en vivo no los sobrescribe.',
       teamsFairplay: 'Equipos y juego limpio', fairplay: 'Juego limpio:', tableWord: 'Tabla',
       col_team: 'Equipo', col_mp: 'PJ', col_w: 'G', col_d: 'E', col_l: 'P', col_goals: 'Goles', col_gd: 'DG', col_pts: 'Pts', col_grp: 'Gr.', col_fp: 'JL',
@@ -341,12 +341,17 @@
     var g=ui.group, teams=teamsOfGroup(g), matches=state.matches.filter(function(m){return m.group===g})
     var h='<h2>'+esc(t('resultsHeading')+' – '+t('group')+' '+g)+'</h2><div class="matches">'
     matches.forEach(function(m){
-      h+='<div class="match">'
+      var md=Math.ceil((+m.id.slice(1))/2) // Spieltag aus der Reihenfolge
+      var meta=[t('matchday')+' '+md]
+      var kt=fmtKickoff(m.kickoff); if(kt) meta.push(kt)
+      if(m.venue) meta.push('📍 '+m.venue)
+      h+='<div class="matchrow"><div class="match">'
         +'<span class="tn r">'+teamCell(m.home)+'</span>'
         +'<input type="number" min="0" data-score="'+m.id+'" data-side="h" value="'+(m.hg==null?'':m.hg)+'">'
         +'<span class="colon">:</span>'
         +'<input type="number" min="0" data-score="'+m.id+'" data-side="a" value="'+(m.ag==null?'':m.ag)+'">'
         +'<span class="tn">'+teamCell(m.away)+'</span></div>'
+        +'<div class="mmeta">'+esc(meta.join(' · '))+'</div></div>'
     })
     h+='</div><p class="hint">'+esc(t('openHint'))+'</p><p class="hint">'+esc(t('manualHint'))+'</p>'
     h+='<h3>'+esc(t('teamsFairplay'))+'</h3><table class="teamedit"><tbody>'
@@ -486,6 +491,15 @@
     return state.matches.find(function(m){ return m.group===g && ((m.home===idA&&m.away===idB)||(m.home===idB&&m.away===idA)) })
   }
   function nowStr(){ var d=new Date(); function p(n){return(n<10?'0':'')+n} return p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds()) }
+  // ESPN-Anstoß (UTC) -> Berliner Zeit, lokalisiert.
+  function fmtKickoff(iso){
+    if(!iso) return ''
+    try{
+      var loc = ui.lang==='en'?'en-GB':ui.lang==='es'?'es-ES':'de-DE'
+      var s = new Date(iso).toLocaleString(loc,{ timeZone:'Europe/Berlin', weekday:'short', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })
+      return s + (ui.lang==='de'?' Uhr':'')
+    }catch(e){ return '' }
+  }
   function updateScoreInputs(){
     el('groupInputs').querySelectorAll('[data-score]').forEach(function(inp){
       if(inp===document.activeElement) return
@@ -516,6 +530,18 @@
     })
     return changed
   }
+  // Spielplan-Infos (Anstoß + Ort) auf die Spiele übertragen. Gibt true bei Änderung.
+  function applySchedule(list){
+    var changed=false
+    list.forEach(function(e){
+      var hid=ALIAS_TO_ID[norm(e.strHomeTeam)], aid=ALIAS_TO_ID[norm(e.strAwayTeam)]
+      if(!hid||!aid||hid.charAt(0)!==aid.charAt(0)) return
+      var m=findMatch(hid.charAt(0),hid,aid); if(!m) return
+      if(e.kickoff && m.kickoff!==e.kickoff){ m.kickoff=e.kickoff; changed=true }
+      if(e.venue && m.venue!==e.venue){ m.venue=e.venue; changed=true }
+    })
+    return changed
+  }
   // Endergebnis eines OpenLigaDB-Spiels (resultTypeID 2 = Endergebnis, sonst letztes).
   function finalResult(m){
     var rs=m.matchResults||[]; if(!rs.length) return null
@@ -532,21 +558,24 @@
     return Promise.all(dates.map(function(d){
       return fetch(ESPN_BASE+d).then(function(r){ return r.json() }).then(function(j){ return (j&&j.events)||[] }).catch(function(){ return null })
     })).then(function(lists){
-      var ok=lists.some(function(x){ return x!==null }), evs=[]
+      var ok=lists.some(function(x){ return x!==null }), evs=[], sched=[]
       lists.forEach(function(list){ if(!list) return; list.forEach(function(ev){
         var comp=ev.competitions&&ev.competitions[0]; if(!comp) return
-        var st=(ev.status||comp.status), done=st&&st.type&&st.type.completed
-        if(!done) return
         var cs=comp.competitors||[]; if(cs.length!==2) return
         var home=cs.filter(function(c){return c.homeAway==='home'})[0]||cs[0]
         var away=cs.filter(function(c){return c.homeAway==='away'})[0]||cs[1]
-        if(home.score==null||away.score==null) return
-        evs.push({ idLeague:WC_LEAGUE,
-          strHomeTeam:(home.team&&(home.team.displayName||home.team.name||home.team.shortDisplayName))||'',
-          strAwayTeam:(away.team&&(away.team.displayName||away.team.name||away.team.shortDisplayName))||'',
-          intHomeScore:+home.score, intAwayScore:+away.score })
+        var hn=(home.team&&(home.team.displayName||home.team.name||home.team.shortDisplayName))||''
+        var an=(away.team&&(away.team.displayName||away.team.name||away.team.shortDisplayName))||''
+        // Spielplan-Infos (auch für noch nicht gespielte Spiele): Anstoß + Ort.
+        var ven=comp.venue||{}, addr=ven.address||{}
+        var venue=[ven.fullName, addr.city].filter(Boolean).join(', ')
+        sched.push({ strHomeTeam:hn, strAwayTeam:an, kickoff:ev.date||'', venue:venue })
+        // Ergebnis nur bei beendeten Spielen.
+        var st=(ev.status||comp.status), done=st&&st.type&&st.type.completed
+        if(!done || home.score==null || away.score==null) return
+        evs.push({ idLeague:WC_LEAGUE, strHomeTeam:hn, strAwayTeam:an, intHomeScore:+home.score, intAwayScore:+away.score })
       })})
-      return { ok:ok, evs:evs }
+      return { ok:ok, evs:evs, sched:sched }
     })
   }
 
@@ -585,9 +614,11 @@
       var ok = (espn && espn.ok) || oldb!==null || tsdb!==null
       // Reihenfolge: Backups zuerst, ESPN zuletzt -> ESPN (am aktuellsten) gewinnt bei Konflikten.
       var all = (oldb||[]).concat(tsdb||[]).concat((espn&&espn.evs)||[])
-      var changed = applyEvents(all)
+      var changedScores = applyEvents(all)
+      var changedSched = applySchedule((espn&&espn.sched)||[])
+      var changed = changedScores || changedSched
       if(ok){ ui.liveError=false; ui.lastUpdate=nowStr() } else { ui.liveError=true }
-      if(changed){ save(); updateScoreInputs(); renderDerived() }
+      if(changed){ save(); updateScoreInputs(); if(changedSched) renderGroupInputs(); renderDerived() }
       renderLiveStatus()
       return changed
     })

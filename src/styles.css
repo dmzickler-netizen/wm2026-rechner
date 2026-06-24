@@ -83,6 +83,9 @@ table.teamedit .fp input { width: 56px; margin-left: 4px; }
 .match input { width: 46px; text-align: center; }
 .match .colon { text-align: center; color: var(--muted); }
 .hint, .legend { font-size: 12px; color: var(--muted); }
+.matchrow { margin-bottom: 10px; }
+.matchrow .match { margin-bottom: 0; }
+.mmeta { font-size: 11px; color: var(--muted); text-align: center; margin-top: 3px; }
 
 .myteam-panel { border-left: 5px solid var(--line); }
 .myteam-panel.adv { border-left-color: var(--accent); }
