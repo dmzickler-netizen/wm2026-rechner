@@ -35,7 +35,7 @@ export const ROUND_LABEL: Record<RoundKey, string> = {
 }
 
 /** Welche zwei Vorrunden-Sieger in ein K.-o.-Spiel ab R16 einlaufen. */
-const FEEDERS: Record<number, [number, number]> = {
+export const FEEDERS: Record<number, [number, number]> = {
   89: [74, 77], 90: [73, 75], 91: [76, 78], 92: [79, 80],
   93: [83, 84], 94: [81, 82], 95: [86, 88], 96: [85, 87],
   97: [89, 90], 98: [93, 94], 99: [91, 92], 100: [95, 96],
@@ -44,7 +44,7 @@ const FEEDERS: Record<number, [number, number]> = {
 }
 
 /** Kind-Match -> Eltern-Match (invertierte FEEDERS). */
-const PARENT: Record<number, number> = (() => {
+export const PARENT: Record<number, number> = (() => {
   const p: Record<number, number> = {}
   for (const [parent, kids] of Object.entries(FEEDERS)) {
     for (const k of kids) p[k] = Number(parent)

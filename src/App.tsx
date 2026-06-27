@@ -7,9 +7,15 @@ import {
   resolveR32Bracket,
   buildTeamOf,
   opponentPath,
+  roundOf,
   ROUND_LABEL,
+  FEEDERS,
+  PARENT,
   type ResolvedMatch,
+  type RoundKey,
 } from './fifa/bracket'
+import { R32_MATCHES, type R32Slot } from './r32Bracket'
+import { KO_SCHEDULE, THIRD_ALLOWED, formatKickoffBerlin } from './fifa/koSchedule'
 import { GROUP_IDS } from './fifa/types'
 import type { GroupId, Match, RankedTeam, Team } from './fifa/types'
 
@@ -104,6 +110,13 @@ export default function App() {
       )}
 
       <OpponentsPanel
+        standings={standings}
+        thirdRanking={thirdRanking}
+        myTeam={myTeam}
+        nameOf={nameOf}
+      />
+
+      <BracketTree
         standings={standings}
         thirdRanking={thirdRanking}
         myTeam={myTeam}
@@ -495,6 +508,144 @@ function OpponentsPanel(props: {
           ))}
         </tbody>
       </table>
+    </section>
+  )
+}
+
+function BracketTree(props: {
+  standings: Record<GroupId, RankedTeam[]>
+  thirdRanking: ThirdPlaceEntry[]
+  myTeam: string
+  nameOf: (id: string) => string
+}) {
+  const { standings, thirdRanking, myTeam, nameOf } = props
+
+  const resolved = useMemo<ResolvedMatch[] | null>(() => {
+    const groups = thirdRanking.filter((e) => e.qualifies).map((e) => e.group)
+    if (groups.length !== 8) return null
+    return resolveR32Bracket(groups, buildTeamOf(standings, nameOf))
+  }, [standings, thirdRanking, nameOf])
+
+  if (!resolved) {
+    return (
+      <section className="opponents">
+        <h2>🏆 Turnierbaum (K.-o.-Phase)</h2>
+        <div className="notice">Bracket konnte nicht aufgelöst werden.</div>
+      </section>
+    )
+  }
+
+  const byNo: Record<number, ResolvedMatch> = {}
+  resolved.forEach((m) => {
+    byNo[m.matchNo] = m
+  })
+
+  const myName = myTeam ? nameOf(myTeam) : ''
+  const pathSet = new Set<number>()
+  if (myName) {
+    const leaf = resolved.find((r) => r.home === myName || r.away === myName)
+    if (leaf) {
+      let cur: number | undefined = leaf.matchNo
+      while (cur != null) {
+        pathSet.add(cur)
+        cur = PARENT[cur]
+      }
+    }
+  }
+
+  const teamSide = (name: string, key: string) => (
+    <div className={'side win' + (name === myName ? ' mineteam' : '')} key={key}>
+      <span className="nm">{name}</span>
+    </div>
+  )
+  const slotSide = (slot: R32Slot, n: number, key: string) => {
+    let label: string
+    if (slot.type === 'winner') label = `Gruppe ${slot.group} · 1.`
+    else if (slot.type === 'runnerUp') label = `Gruppe ${slot.group} · 2.`
+    else label = 'Bester Dritter' + (THIRD_ALLOWED[n] ? ` (${THIRD_ALLOWED[n]})` : '')
+    return (
+      <div className="side" key={key}>
+        <span className="nm dim">{label}</span>
+      </div>
+    )
+  }
+  const feederSide = (n: number, kind: 'winner' | 'loser', key: string) => {
+    const label = kind === 'winner' ? `Sieger Sp. ${n}` : `Verlierer Sp. ${n}`
+    const feeder = byNo[n]
+    const sub =
+      kind === 'winner' && roundOf(n) === 'R32' && feeder
+        ? `${feeder.home} · ${feeder.away}`
+        : ''
+    const mine = kind === 'winner' && pathSet.has(n)
+    return (
+      <div className={'side' + (mine ? ' mineteam' : '')} key={key}>
+        <span className="nm dim">{label}</span>
+        {sub ? <span className="sub">{sub}</span> : null}
+      </div>
+    )
+  }
+  const sidesOf = (n: number) => {
+    if (n === 103) return [feederSide(101, 'loser', 'a'), feederSide(102, 'loser', 'b')]
+    if (roundOf(n) === 'R32') {
+      const m = byNo[n]
+      if (m) return [teamSide(m.home, 'a'), teamSide(m.away, 'b')]
+      const def = R32_MATCHES.find((x) => x.matchNo === n)
+      return def ? [slotSide(def.home, n, 'a'), slotSide(def.away, n, 'b')] : []
+    }
+    const f = FEEDERS[n]
+    return [feederSide(f[0], 'winner', 'a'), feederSide(f[1], 'winner', 'b')]
+  }
+  const node = (n: number, extra?: string) => {
+    const sch = KO_SCHEDULE[n]
+    const time = formatKickoffBerlin(sch ? sch.iso : undefined)
+    const venue = sch ? sch.venue : ''
+    return (
+      <div className={'tnode' + (pathSet.has(n) ? ' mine' : '') + (extra ? ' ' + extra : '')}>
+        <div className="nh">
+          <span className="no">#{n}</span>
+          <span className="kt">{time}</span>
+        </div>
+        {venue ? <div className="ven">📍 {venue}</div> : null}
+        {sidesOf(n)}
+      </div>
+    )
+  }
+
+  const COLS: Array<[RoundKey, number[]]> = [
+    ['R32', [74, 77, 73, 75, 83, 84, 81, 82, 76, 78, 79, 80, 86, 88, 85, 87]],
+    ['R16', [89, 90, 93, 94, 91, 92, 95, 96]],
+    ['QF', [97, 98, 99, 100]],
+    ['SF', [101, 102]],
+    ['F', [104]],
+  ]
+
+  return (
+    <section className="opponents">
+      <h2>🏆 Turnierbaum (K.-o.-Phase)</h2>
+      <p className="hint">
+        Wer, wann (Berliner Zeit) und wo – ab Sechzehntelfinale. Die R32-Paarungen
+        ergeben sich aus der aktuellen Tabelle und ändern sich live; ab Achtelfinale
+        steht der Gegner noch nicht fest (Sieger des jeweiligen Spiels, mögliche Teams
+        als Hinweis darunter). Tabelle horizontal scrollbar.
+      </p>
+      <div className="tree-wrap">
+        <div className="tree">
+          {COLS.map(([round, nums]) => (
+            <div className="tcol" key={round}>
+              <div className="ch">{ROUND_LABEL[round]}</div>
+              <div className="body">
+                {nums.map((n) => (
+                  <div className="tcell" key={n}>
+                    {node(n)}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <h3>Spiel um Platz 3</h3>
+      <div className="tree-wrap">{node(103, 'solo')}</div>
     </section>
   )
 }
