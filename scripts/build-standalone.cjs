@@ -24,6 +24,7 @@ ${css}
   <header id="hdr"></header>
   <div id="myteam"></div>
   <section id="opponents"></section>
+  <section id="bracketTree"></section>
   <nav class="tabs" id="tabs"></nav>
   <section id="groupInputs"></section>
   <section id="standings"></section>

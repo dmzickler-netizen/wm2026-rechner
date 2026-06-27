@@ -127,6 +127,31 @@ table.bracket .l { text-align: left; width: 42%; }
 table.bracket .vs { text-align: center; color: var(--muted); }
 table.bracket tr.mine td { background: rgba(0,208,132,0.14); }
 
+/* Turnierbaum (visuelles Bracket) */
+.tree-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 10px; }
+.tree { display: flex; align-items: stretch; min-width: 880px; }
+.tcol { display: flex; flex-direction: column; min-width: 172px; }
+.tcol .ch { text-align: center; font-weight: 600; color: var(--muted); font-size: 13px; padding: 2px 0 8px; }
+.tcol .body { display: flex; flex-direction: column; flex: 1 1 auto; }
+.tcell { flex: 1 1 0; display: flex; align-items: center; position: relative; }
+.tnode { width: 150px; margin: 6px 11px; background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
+.tnode.mine { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.tnode .nh { display: flex; justify-content: space-between; gap: 6px; color: var(--muted); font-size: 11px; margin-bottom: 3px; }
+.tnode .nh .no { color: var(--accent); font-weight: 600; }
+.tnode .nh .kt { text-align: right; }
+.tnode .ven { color: var(--muted); font-size: 10.5px; line-height: 1.3; margin-bottom: 5px; }
+.tnode .side { padding: 3px 0; font-size: 12px; }
+.tnode .side + .side { border-top: 1px solid var(--line); }
+.tnode .side.win .nm { font-weight: 600; }
+.tnode .side .nm.dim { color: var(--muted); }
+.tnode .side.mineteam .nm { color: var(--accent); font-weight: 600; }
+.tnode .side .sub { display: block; color: var(--muted); font-size: 10px; margin-top: 1px; }
+.tnode.solo { display: inline-block; width: auto; min-width: 230px; margin: 0; }
+.tcol:not(:last-child) .tcell::after { content: ''; position: absolute; right: 0; width: 11px; box-sizing: border-box; border-right: 1.5px solid var(--line); }
+.tcol:not(:last-child) .tcell:nth-child(odd)::after { top: 50%; bottom: 0; border-top: 1.5px solid var(--line); }
+.tcol:not(:last-child) .tcell:nth-child(even)::after { top: 0; bottom: 50%; border-bottom: 1.5px solid var(--line); }
+.tcol:not(:first-child) .tcell::before { content: ''; position: absolute; left: 0; width: 11px; top: 50%; border-top: 1.5px solid var(--line); }
+
 </style>
 </head>
 <body>
@@ -134,6 +159,7 @@ table.bracket tr.mine td { background: rgba(0,208,132,0.14); }
   <header id="hdr"></header>
   <div id="myteam"></div>
   <section id="opponents"></section>
+  <section id="bracketTree"></section>
   <nav class="tabs" id="tabs"></nav>
   <section id="groupInputs"></section>
   <section id="standings"></section>
@@ -5463,6 +5489,9 @@ var WC2026 = {
       notInR16: 'ist nach aktueller Tabelle nicht im Achtelfinale.', fullR32: 'Komplettes Sechzehntelfinale (R32)',
       bracketUnresolved: 'Bracket konnte nicht aufgelöst werden.',
       round_R32: 'Sechzehntelfinale', round_R16: 'Achtelfinale', round_QF: 'Viertelfinale', round_SF: 'Halbfinale', round_F: 'Finale',
+      treeHeading: '🏆 Turnierbaum (K.-o.-Phase)',
+      treeHint: 'Wer, wann (Berliner Zeit) und wo – ab Sechzehntelfinale. Die R32-Paarungen ergeben sich aus der aktuellen Tabelle und ändern sich live; ab Achtelfinale steht der Gegner noch nicht fest (Sieger des jeweiligen Spiels, mögliche Teams als Hinweis darunter). Tabelle horizontal scrollbar.',
+      winnerShort: 'Sieger Sp. {n}', loserShort: 'Verlierer Sp. {n}', bestThird: 'Bester Dritter', thirdPlaceHeading: 'Spiel um Platz 3',
     },
     en: {
       appTitle: '⚽ World Cup 2026 – Opponent Finder',
@@ -5488,6 +5517,9 @@ var WC2026 = {
       notInR16: 'is not in the Round of 16 based on the current table.', fullR32: 'Full Round of 32',
       bracketUnresolved: 'Bracket could not be resolved.',
       round_R32: 'Round of 32', round_R16: 'Round of 16', round_QF: 'Quarter-finals', round_SF: 'Semi-finals', round_F: 'Final',
+      treeHeading: '🏆 Bracket (knockout)',
+      treeHint: 'Who, when (Berlin time) and where – from the Round of 32 on. R32 pairings come from the current table and update live; from the Round of 16 the opponent is not yet fixed (winner of the respective match, possible teams shown below as a hint). Table scrolls horizontally.',
+      winnerShort: 'Winner M{n}', loserShort: 'Loser M{n}', bestThird: 'Best 3rd', thirdPlaceHeading: 'Third-place play-off',
     },
     es: {
       appTitle: '⚽ Mundial 2026 – Buscador de rivales',
@@ -5513,6 +5545,9 @@ var WC2026 = {
       notInR16: 'no está en octavos según la tabla actual.', fullR32: 'Dieciseisavos completos (R32)',
       bracketUnresolved: 'No se pudo resolver el cuadro.',
       round_R32: 'Dieciseisavos', round_R16: 'Octavos', round_QF: 'Cuartos', round_SF: 'Semifinales', round_F: 'Final',
+      treeHeading: '🏆 Cuadro (eliminatorias)',
+      treeHint: 'Quién, cuándo (hora de Berlín) y dónde – desde dieciseisavos. Los cruces de R32 salen de la tabla actual y se actualizan en vivo; desde octavos el rival aún no está fijo (ganador del partido correspondiente, posibles equipos como pista abajo). La tabla se desplaza horizontalmente.',
+      winnerShort: 'Ganador P{n}', loserShort: 'Perdedor P{n}', bestThird: 'Mejor 3.º', thirdPlaceHeading: 'Tercer puesto',
     },
   }
   function t(k){ var d=T[ui.lang]||T.de; return d[k]!=null?d[k]:(T.de[k]!=null?T.de[k]:k) }
@@ -5567,6 +5602,48 @@ var WC2026 = {
   var PARENT = {}
   Object.keys(FEEDERS).forEach(function (p) { FEEDERS[p].forEach(function (k) { PARENT[k] = +p }) })
   function roundOf(n){ if(n<=88)return'R32'; if(n<=96)return'R16'; if(n<=100)return'QF'; if(n<=102)return'SF'; return'F' }
+
+  // K.-o.-Spielplan (Spiele 73–104, inkl. 103 = Platz 3). Quelle: offizieller FIFA-Spielplan
+  // / Wikipedia '2026 FIFA World Cup knockout stage'. iso = Anstoß in UTC; fmtKickoff() rechnet
+  // in Berliner Zeit um. v = 'Stadion, Stadt'. Statisch (nicht aus Live-Quelle), da die K.-o.-Spiele
+  // noch keine Teams haben.
+  var KO_SCHEDULE = {
+    73:{iso:'2026-06-28T19:00:00Z',v:'SoFi Stadium, Los Angeles'},
+    74:{iso:'2026-06-29T20:30:00Z',v:'Gillette Stadium, Boston'},
+    75:{iso:'2026-06-30T01:00:00Z',v:'Estadio BBVA, Monterrey'},
+    76:{iso:'2026-06-29T17:00:00Z',v:'NRG Stadium, Houston'},
+    77:{iso:'2026-06-30T21:00:00Z',v:'MetLife Stadium, New York/NJ'},
+    78:{iso:'2026-06-30T17:00:00Z',v:'AT&T Stadium, Dallas'},
+    79:{iso:'2026-07-01T01:00:00Z',v:'Estadio Azteca, Mexiko-Stadt'},
+    80:{iso:'2026-07-01T16:00:00Z',v:'Mercedes-Benz Stadium, Atlanta'},
+    81:{iso:'2026-07-02T00:00:00Z',v:"Levi's Stadium, San Francisco"},
+    82:{iso:'2026-07-01T20:00:00Z',v:'Lumen Field, Seattle'},
+    83:{iso:'2026-07-02T23:00:00Z',v:'BMO Field, Toronto'},
+    84:{iso:'2026-07-02T19:00:00Z',v:'SoFi Stadium, Los Angeles'},
+    85:{iso:'2026-07-03T03:00:00Z',v:'BC Place, Vancouver'},
+    86:{iso:'2026-07-03T22:00:00Z',v:'Hard Rock Stadium, Miami'},
+    87:{iso:'2026-07-04T01:30:00Z',v:'Arrowhead Stadium, Kansas City'},
+    88:{iso:'2026-07-03T18:00:00Z',v:'AT&T Stadium, Dallas'},
+    89:{iso:'2026-07-04T21:00:00Z',v:'Lincoln Financial Field, Philadelphia'},
+    90:{iso:'2026-07-04T17:00:00Z',v:'NRG Stadium, Houston'},
+    91:{iso:'2026-07-05T20:00:00Z',v:'MetLife Stadium, New York/NJ'},
+    92:{iso:'2026-07-06T00:00:00Z',v:'Estadio Azteca, Mexiko-Stadt'},
+    93:{iso:'2026-07-06T19:00:00Z',v:'AT&T Stadium, Dallas'},
+    94:{iso:'2026-07-07T00:00:00Z',v:'Lumen Field, Seattle'},
+    95:{iso:'2026-07-07T16:00:00Z',v:'Mercedes-Benz Stadium, Atlanta'},
+    96:{iso:'2026-07-07T20:00:00Z',v:'BC Place, Vancouver'},
+    97:{iso:'2026-07-09T20:00:00Z',v:'Gillette Stadium, Boston'},
+    98:{iso:'2026-07-10T19:00:00Z',v:'SoFi Stadium, Los Angeles'},
+    99:{iso:'2026-07-11T21:00:00Z',v:'Hard Rock Stadium, Miami'},
+    100:{iso:'2026-07-12T01:00:00Z',v:'Arrowhead Stadium, Kansas City'},
+    101:{iso:'2026-07-14T19:00:00Z',v:'AT&T Stadium, Dallas'},
+    102:{iso:'2026-07-15T19:00:00Z',v:'Mercedes-Benz Stadium, Atlanta'},
+    103:{iso:'2026-07-18T21:00:00Z',v:'Hard Rock Stadium, Miami'},
+    104:{iso:'2026-07-19T19:00:00Z',v:'MetLife Stadium, New York/NJ'},
+  }
+  // Erlaubte Herkunftsgruppen der Drittplatzierten je 'Sieger vs 3.'-Spiel (für den Fallback,
+  // falls die Tabelle den konkreten Dritten noch nicht hergibt).
+  var THIRD_ALLOWED = {74:'A/B/C/D/F',77:'C/D/F/G/H',79:'C/E/F/H/I',80:'E/H/I/J/K',81:'B/E/F/I/J',82:'A/E/H/I/J',85:'E/F/G/I/J',87:'D/E/I/J/L'}
 
   // ---------- State ----------
   var KEY = 'wm2026-standalone-v2'
@@ -5827,7 +5904,7 @@ var WC2026 = {
 
   function renderDerived(){
     var standings=allStandings(), thirds=rankThirds(standings)
-    renderStandings(standings); renderThirds(thirds); renderMyTeam(standings,thirds); renderOpponents(standings,thirds)
+    renderStandings(standings); renderThirds(thirds); renderMyTeam(standings,thirds); renderOpponents(standings,thirds); renderBracketTree(standings,thirds)
   }
   function rowClass(rank,team){ var c=rank<=2?'adv':rank===3?'maybe':'out'; if(ui.myTeam&&team===ui.myTeam)c+=' mine'; return c }
 
@@ -5914,6 +5991,72 @@ var WC2026 = {
     })
     h+='</tbody></table>'
     el('opponents').innerHTML=h
+  }
+
+  // ---------- Turnierbaum (visuelles Bracket) ----------
+  function teamShort(name){ return flag(name)+esc(name) }
+  function koMeta(n){ var s=KO_SCHEDULE[n]; return s?{time:fmtKickoff(s.iso),ven:s.v}:{time:'',ven:''} }
+
+  function renderBracketTree(standings, thirds){
+    var sec=el('bracketTree'); if(!sec) return
+    var qual=thirds.filter(function(e){return e.qualifies}).map(function(e){return e.group})
+    var resolved = qual.length===8 ? resolveR32(qual, buildTeamOf(standings)) : null
+    var byNo={}; if(resolved) resolved.forEach(function(m){ byNo[m.n]=m })
+    var myName=ui.myTeam?nameOf(ui.myTeam):''
+    var pathSet={}
+    if(resolved && myName){
+      var lm=resolved.find(function(r){return r.home===myName||r.away===myName})
+      if(lm){ var cur=lm.n; while(cur!=null){ pathSet[cur]=true; cur=PARENT[cur] } }
+    }
+
+    function teamSide(name){
+      var mineCls=(name && name===myName)?' mineteam':''
+      return '<div class="side win'+mineCls+'"><span class="nm">'+teamShort(name)+'</span></div>'
+    }
+    function slotSide(slot,n){
+      var label
+      if(slot.t==='w') label=t('group')+' '+slot.g+' · 1.'
+      else if(slot.t==='r') label=t('group')+' '+slot.g+' · 2.'
+      else label=t('bestThird')+(THIRD_ALLOWED[n]?' ('+THIRD_ALLOWED[n]+')':'')
+      return '<div class="side"><span class="nm dim">'+esc(label)+'</span></div>'
+    }
+    function feederSide(n,word){
+      var label=t(word).replace('{n}',n), sub=''
+      if(roundOf(n)==='R32' && byNo[n]) sub=teamShort(byNo[n].home)+' · '+teamShort(byNo[n].away)
+      var mineCls=(word==='winnerShort' && pathSet[n])?' mineteam':''
+      return '<div class="side'+mineCls+'"><span class="nm dim">'+esc(label)+'</span>'+(sub?'<span class="sub">'+sub+'</span>':'')+'</div>'
+    }
+    function sidesOf(n){
+      if(n===103) return feederSide(101,'loserShort')+feederSide(102,'loserShort')
+      if(roundOf(n)==='R32'){
+        if(byNo[n]) return teamSide(byNo[n].home)+teamSide(byNo[n].away)
+        var def=null; for(var i=0;i<R32_MATCHES.length;i++){ if(R32_MATCHES[i].n===n){ def=R32_MATCHES[i]; break } }
+        return def?(slotSide(def.h,n)+slotSide(def.a,n)):''
+      }
+      var f=FEEDERS[n]
+      return feederSide(f[0],'winnerShort')+feederSide(f[1],'winnerShort')
+    }
+    function node(n,extra){
+      var mt=koMeta(n), cls='tnode'+(pathSet[n]?' mine':'')+(extra?' '+extra:'')
+      return '<div class="'+cls+'">'
+        +'<div class="nh"><span class="no">#'+n+'</span><span class="kt">'+esc(mt.time)+'</span></div>'
+        +(mt.ven?'<div class="ven">📍 '+esc(mt.ven)+'</div>':'')
+        +sidesOf(n)+'</div>'
+    }
+
+    var COLS=[['R32',[74,77,73,75,83,84,81,82,76,78,79,80,86,88,85,87]],
+              ['R16',[89,90,93,94,91,92,95,96]],
+              ['QF',[97,98,99,100]],['SF',[101,102]],['F',[104]]]
+    var h='<h2>'+esc(t('treeHeading'))+'</h2><p class="hint">'+esc(t('treeHint'))+'</p>'
+    h+='<div class="tree-wrap"><div class="tree">'
+    COLS.forEach(function(c){
+      h+='<div class="tcol"><div class="ch">'+esc(roundLabel(c[0]))+'</div><div class="body">'
+      c[1].forEach(function(n){ h+='<div class="tcell">'+node(n)+'</div>' })
+      h+='</div></div>'
+    })
+    h+='</div></div>'
+    h+='<h3>'+esc(t('thirdPlaceHeading'))+'</h3><div class="tree-wrap">'+node(103,'solo')+'</div>'
+    sec.innerHTML=h
   }
 
   // ---------- Live ----------
